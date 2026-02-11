@@ -110,7 +110,7 @@ export async function fetchReadmeFromGitHub(
     if (!response.ok) {
       if (response.status === 404) {
         throw new ValidationError(
-          'README not found in this repository. You can write one manually.'
+          `README not found in ${owner}/${repo}. Tried default endpoint and common variations. You can write one manually.`
         );
       }
       if (response.status === 403) {
@@ -118,7 +118,12 @@ export async function fetchReadmeFromGitHub(
           'Access denied. Check your GitHub token permissions.'
         );
       }
-      throw new Error(`GitHub API error: ${response.statusText}`);
+      if (response.status === 401) {
+        throw new ValidationError(
+          'Authentication failed. Your GitHub token may be invalid or expired.'
+        );
+      }
+      throw new Error(`GitHub API error (${response.status}): ${response.statusText}`);
     }
 
     const readmeContent = await response.text();
