@@ -3,11 +3,12 @@
  * Container for Impact Cards with loading/error/empty states
  */
 
-import { hasGitHubToken, getImpactData } from '../api/actions';
-import { ImpactCard } from './ImpactCard';
+import { hasGitHubToken } from '../api/actions';
+import { getUserRepositories } from '../api/repository-actions';
 import { PatTokenForm } from './PatTokenForm';
-import { RateLimitWarning } from './RateLimitWarning';
+import { RepositoryManager } from './RepositoryManager';
 import { createClient } from '@/lib/supabase/server';
+import Link from 'next/link';
 
 export async function QuickPeek() {
   // Check if user is authenticated
@@ -42,53 +43,28 @@ export async function QuickPeek() {
     );
   }
 
-  // Fetch impact data
-  // For now, we'll fetch for a default repository or allow configuration
-  // You can modify this to fetch multiple repos or make it configurable
-  const impactResult = await getImpactData([
-    // Example: fetch your own repository
-    // { owner: 'yourusername', repo: 'yourrepo' },
-  ]);
+  // Get user's repositories from database
+  const reposResult = await getUserRepositories();
 
-  // Handle error state
-  if (!impactResult.success || !impactResult.data) {
+  // If no repositories configured, show repository manager
+  if (!reposResult.success || !reposResult.data || reposResult.data.length === 0) {
     return (
       <section className="w-full py-12 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6">
-            <h3 className="text-lg font-semibold text-yellow-900 dark:text-yellow-200 mb-2">
-              Unable to Load Impact Data
-            </h3>
-            <p className="text-yellow-800 dark:text-yellow-300">
-              {impactResult.error ||
-                'Please configure your repositories to display impact metrics.'}
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold mb-2">Your Impact Dashboard</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              Add repositories to start tracking your impact
             </p>
           </div>
+          <RepositoryManager />
         </div>
       </section>
     );
   }
 
-  // Get all metrics from all repositories
-  const allMetrics = impactResult.data.flatMap((repo) => repo.metrics);
-
-  // If no metrics, show empty state
-  if (allMetrics.length === 0) {
-    return (
-      <section className="w-full py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center">
-            <h2 className="text-3xl font-bold mb-4">Your Impact Dashboard</h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-8">
-              No impact metrics found yet. Add repositories to track your
-              contributions.
-            </p>
-          </div>
-        </div>
-      </section>
-    );
-  }
-
+  // For now, just show connected repositories without fetching impact data
+  // TODO: Implement impact data fetching later
   return (
     <section className="w-full py-12 px-4">
       <div className="max-w-7xl mx-auto">
@@ -96,29 +72,56 @@ export async function QuickPeek() {
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold mb-2">Your Impact Dashboard</h2>
           <p className="text-gray-600 dark:text-gray-400">
-            Real-time metrics from your GitHub repositories
+            Connected repositories ready to track
           </p>
         </div>
 
-        {/* Rate Limit Warning */}
-        <RateLimitWarning />
-
-        {/* Impact Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-8">
-          {allMetrics.map((metric) => (
-            <ImpactCard key={metric.id} metric={metric} />
-          ))}
-        </div>
-
-        {/* Repository Info */}
-        {impactResult.data.length > 0 && (
-          <div className="mt-8 text-center text-sm text-gray-500 dark:text-gray-400">
-            Last updated:{' '}
-            {new Date(
-              impactResult.data[0].lastUpdated
-            ).toLocaleString()}
+        {/* Connected Repositories */}
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold">Connected Repositories</h3>
+              <Link
+                href="/repositories"
+                className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400"
+              >
+                Manage
+              </Link>
+            </div>
+            <ul className="space-y-3">
+              {reposResult.data.map((repo) => (
+                <li
+                  key={`${repo.owner}/${repo.repo}`}
+                  className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                >
+                  <div className="text-2xl">📊</div>
+                  <div className="flex-1">
+                    <a
+                      href={`https://github.com/${repo.owner}/${repo.repo}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-700 dark:text-blue-400 font-medium"
+                    >
+                      {repo.owner}/{repo.repo}
+                    </a>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Ready to track impact metrics
+                    </p>
+                  </div>
+                  <div className="text-green-600 dark:text-green-400">
+                    ✓ Connected
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
+                💡 Impact metrics will be displayed here soon! We&apos;re currently
+                setting up the data pipeline.
+              </p>
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
