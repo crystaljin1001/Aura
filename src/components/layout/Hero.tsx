@@ -128,7 +128,7 @@ function CodeSnippet({ example }: { example: TransformExample }) {
       transition={{ duration: 0.5 }}
       className="relative"
     >
-      <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 overflow-hidden">
+      <div className="bg-gray-900 rounded-2xl shadow-2xl border border-gray-800 overflow-hidden grain">
         {/* Terminal header */}
         <div className="bg-gray-800 px-4 py-3 flex items-center gap-2 border-b border-gray-700">
           <div className="flex gap-2">
@@ -184,7 +184,7 @@ function ImpactMetric({ example }: { example: TransformExample }) {
       transition={{ duration: 0.6, delay: 1.5 }}
       className="relative"
     >
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8">
+      <div className="glass rounded-2xl shadow-2xl p-8 grain">
         {/* Metric label */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -418,7 +418,7 @@ export function Hero() {
           transition={{ delay: 0.8 }}
           className="text-center mt-12"
         >
-          <button className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-full shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all">
+          <button className="px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-full shadow-premium hover:shadow-2xl transform hover:scale-105 transition-all grain">
             Start Building Your Story
           </button>
         </motion.div>

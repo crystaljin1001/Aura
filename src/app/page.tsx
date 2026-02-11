@@ -12,7 +12,7 @@ export default async function Home() {
   return (
     <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 py-4 px-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border-b border-zinc-200 dark:border-zinc-800">
+      <nav className="fixed top-0 left-0 right-0 z-50 py-4 px-6 glass border-b-0 shadow-premium">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <h2 className="text-xl font-bold">Builder&apos;s OS</h2>
           {user ? (

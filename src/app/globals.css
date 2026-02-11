@@ -3,6 +3,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Glass effect variables */
+  --glass-opacity: 0.7;
+  --glass-blur: 16px;
+  --glass-border: rgba(255, 255, 255, 0.18);
+  --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+
+  /* Grain texture */
+  --grain-opacity: 0.03;
 }
 
 @theme inline {
@@ -16,11 +25,163 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --glass-opacity: 0.6;
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    --grain-opacity: 0.05;
   }
 }
 
+/* Grain texture background */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 400 400' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.5' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  z-index: 9999;
+  mix-blend-mode: overlay;
+}
+
+/* Glass utility classes */
+@layer utilities {
+  /* Basic glass effect */
+  .glass {
+    background: rgba(255, 255, 255, var(--glass-opacity));
+    backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* Glass variants */
+  .glass-light {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+  }
+
+  .glass-heavy {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(24px) saturate(200%);
+    -webkit-backdrop-filter: blur(24px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 12px 48px 0 rgba(31, 38, 135, 0.2);
+  }
+
+  .glass-subtle {
+    background: rgba(255, 255, 255, 0.5);
+    backdrop-filter: blur(8px) saturate(120%);
+    -webkit-backdrop-filter: blur(8px) saturate(120%);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+  }
+
+  /* Dark mode glass */
+  @media (prefers-color-scheme: dark) {
+    .glass {
+      background: rgba(10, 10, 10, var(--glass-opacity));
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .glass-light {
+      background: rgba(20, 20, 20, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .glass-heavy {
+      background: rgba(15, 15, 15, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 12px 48px 0 rgba(0, 0, 0, 0.4);
+    }
+
+    .glass-subtle {
+      background: rgba(30, 30, 30, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+  }
+
+  /* Glass with specific colors */
+  .glass-blue {
+    background: rgba(59, 130, 246, 0.15);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+
+  .glass-purple {
+    background: rgba(139, 92, 246, 0.15);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid rgba(139, 92, 246, 0.2);
+  }
+
+  .glass-green {
+    background: rgba(34, 197, 94, 0.15);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid rgba(34, 197, 94, 0.2);
+  }
+
+  /* Frosted glass effect */
+  .frosted {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px) brightness(1.1);
+    -webkit-backdrop-filter: blur(20px) brightness(1.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .frosted {
+      background: rgba(20, 20, 20, 0.4);
+      backdrop-filter: blur(20px) brightness(0.9);
+      -webkit-backdrop-filter: blur(20px) brightness(0.9);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  }
+
+  /* Utility for premium subtle shadow */
+  .shadow-premium {
+    box-shadow:
+      0 1px 2px rgba(0, 0, 0, 0.02),
+      0 4px 8px rgba(0, 0, 0, 0.03),
+      0 8px 16px rgba(0, 0, 0, 0.03),
+      0 16px 32px rgba(0, 0, 0, 0.02);
+  }
+
+  /* Grain texture overlay for specific elements */
+  .grain {
+    position: relative;
+  }
+
+  .grain::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='3' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+    border-radius: inherit;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    .grain::before {
+      opacity: 0.06;
+    }
+  }
 }

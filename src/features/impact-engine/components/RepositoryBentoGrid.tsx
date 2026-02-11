@@ -102,7 +102,7 @@ function RepositoryCard({
         ease: [0.25, 0.46, 0.45, 0.94],
       }}
       whileHover={{ scale: 1.02, y: -4 }}
-      className={`relative overflow-hidden rounded-2xl bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl transition-shadow ${
+      className={`relative overflow-hidden rounded-2xl glass grain shadow-lg hover:shadow-2xl transition-all ${
         isLarge ? 'col-span-2 row-span-2' : ''
       }`}
     >
@@ -246,7 +246,7 @@ export function RepositoryBentoGrid({ repositories }: RepositoryBentoGridProps) 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
-        className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-2xl border border-blue-200 dark:border-blue-800"
+        className="mt-8 p-6 glass-blue rounded-2xl shadow-premium grain"
       >
         <div className="flex items-start gap-4">
           <div className="text-3xl">💡</div>
