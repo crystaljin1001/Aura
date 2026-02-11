@@ -20,7 +20,13 @@ export default async function Home() {
                 href="/repositories"
                 className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
               >
-                Manage Repositories
+                Repositories
+              </Link>
+              <Link
+                href="/storyboard"
+                className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              >
+                Storyboard
               </Link>
               <span className="text-sm text-zinc-600 dark:text-zinc-400">
                 {user.email}

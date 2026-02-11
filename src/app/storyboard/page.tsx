@@ -1,9 +1,9 @@
-import { RepositoryManager } from '@/features/impact-engine/components/RepositoryManager';
+import { StoryboardForm } from '@/features/narrative-storyboarder/components/StoryboardForm';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 
-export default async function RepositoriesPage() {
+export default async function StoryboardPage() {
   const supabase = await createClient();
   const {
     data: { user },
@@ -30,10 +30,10 @@ export default async function RepositoriesPage() {
               Dashboard
             </Link>
             <Link
-              href="/storyboard"
+              href="/repositories"
               className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
             >
-              Storyboard
+              Repositories
             </Link>
             <span className="text-sm text-zinc-600 dark:text-zinc-400">
               {user.email}
@@ -50,11 +50,20 @@ export default async function RepositoriesPage() {
         </div>
       </nav>
 
-      {/* Repository Manager */}
+      {/* Header */}
       <section className="py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <RepositoryManager />
+        <div className="max-w-7xl mx-auto text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+            🎬 Narrative Storyboarder
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+            Transform your project README into a compelling video demo script.
+            AI-powered, narrative-driven, and ready to record.
+          </p>
         </div>
+
+        {/* Storyboard Form */}
+        <StoryboardForm />
       </section>
     </div>
   );
