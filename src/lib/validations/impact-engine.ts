@@ -58,12 +58,18 @@ export type RepoIdentifiersArray = z.infer<typeof repoIdentifiersArraySchema>;
  * Parses a GitHub repository URL into owner and repo
  * Supports formats:
  * - https://github.com/owner/repo
+ * - https://github.com/owner/repo.git
  * - github.com/owner/repo
  * - owner/repo
  */
 export function parseGitHubUrl(url: string): RepoIdentifier | null {
   // Remove trailing slashes and whitespace
-  const cleaned = url.trim().replace(/\/+$/, '');
+  let cleaned = url.trim().replace(/\/+$/, '');
+
+  // Remove .git suffix if present
+  if (cleaned.endsWith('.git')) {
+    cleaned = cleaned.slice(0, -4);
+  }
 
   // Try to match different URL formats
   const patterns = [
