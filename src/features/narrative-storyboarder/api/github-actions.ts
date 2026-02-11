@@ -53,6 +53,7 @@ async function getUserToken(): Promise<string> {
 
 /**
  * Fetches README content from a GitHub repository
+ * Tries multiple common README filenames
  * @param owner - Repository owner
  * @param repo - Repository name
  * @returns ApiResponse with README content
@@ -65,8 +66,8 @@ export async function fetchReadmeFromGitHub(
     // Get user's GitHub token
     const token = await getUserToken();
 
-    // Fetch README from GitHub API
-    const response = await fetch(
+    // Try the default README endpoint first
+    let response = await fetch(
       `https://api.github.com/repos/${owner}/${repo}/readme`,
       {
         headers: {
@@ -77,10 +78,44 @@ export async function fetchReadmeFromGitHub(
       }
     );
 
+    // If 404, try common README variations
+    if (response.status === 404) {
+      const readmeVariations = [
+        'README.md',
+        'readme.md',
+        'README',
+        'readme',
+        'README.txt',
+        'Readme.md',
+      ];
+
+      for (const filename of readmeVariations) {
+        response = await fetch(
+          `https://api.github.com/repos/${owner}/${repo}/contents/${filename}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: 'application/vnd.github.raw+json',
+              'X-GitHub-Api-Version': '2022-11-28',
+            },
+          }
+        );
+
+        if (response.ok) {
+          break; // Found one!
+        }
+      }
+    }
+
     if (!response.ok) {
       if (response.status === 404) {
         throw new ValidationError(
           'README not found in this repository. You can write one manually.'
+        );
+      }
+      if (response.status === 403) {
+        throw new ValidationError(
+          'Access denied. Check your GitHub token permissions.'
         );
       }
       throw new Error(`GitHub API error: ${response.statusText}`);
