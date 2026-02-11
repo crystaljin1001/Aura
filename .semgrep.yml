@@ -1,0 +1,70 @@
+rules:
+  # Dangerous HTML rendering - XSS risk
+  - id: dangerous-inner-html-usage
+    pattern: dangerouslySetInnerHTML=$OBJ
+    message: "CRITICAL: dangerouslySetInnerHTML can lead to XSS. Sanitize user input first with sanitizeString() from src/features/impact-engine/utils/sanitize.ts"
+    languages:
+      - typescript
+      - javascript
+    severity: ERROR
+    metadata:
+      category: security
+      cwe: "CWE-79: Cross-site Scripting (XSS)"
+
+  # TypeScript any type usage
+  - id: typescript-any-type
+    pattern-either:
+      - pattern: "function $F(..., $X: any, ...) { ... }"
+      - pattern: "const $X: any = ..."
+      - pattern: "let $X: any = ..."
+    message: "WARNING: Avoid 'any' type. Use 'unknown' with type guards instead (project policy: zero tolerance for any)"
+    languages:
+      - typescript
+    severity: WARNING
+    metadata:
+      category: code-quality
+
+  # Weak randomness for security
+  - id: weak-random-for-security
+    pattern: Math.random()
+    message: "WARNING: Math.random() is not cryptographically secure. Use crypto.getRandomValues() for security operations like tokens or IVs"
+    languages:
+      - typescript
+      - javascript
+    severity: WARNING
+    metadata:
+      category: security
+      cwe: "CWE-338: Use of Cryptographically Weak Pseudo-Random Number Generator"
+
+  # Missing authentication in server actions
+  - id: missing-auth-in-server-action
+    patterns:
+      - pattern: |
+          export async function $FUNC(...) {
+            ...
+          }
+      - pattern-not: |
+          export async function $FUNC(...) {
+            ...
+            await getAuthenticatedUser()
+            ...
+          }
+      - pattern-not: |
+          export async function $FUNC(...) {
+            ...
+            supabase.auth.getUser()
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $FUNC
+          regex: ".*(store|save|delete|update|create|remove).*"
+    message: "WARNING: Server action may be missing authentication check. Add 'const user = await getAuthenticatedUser()'"
+    languages:
+      - typescript
+    severity: WARNING
+    paths:
+      include:
+        - "src/features/*/api/*.ts"
+    metadata:
+      category: security
+      cwe: "CWE-862: Missing Authorization"
