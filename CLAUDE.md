@@ -130,9 +130,46 @@ function ClientComponent() {
 }
 ```
 
-## Pre-Commit Checklist
+## ⚠️ PRE-COMMIT SECURITY CHECK (MANDATORY)
 
-Before committing, ALWAYS verify:
+**CRITICAL: This check runs BEFORE EVERY commit and CANNOT be bypassed.**
+
+### Automated Security Workflow
+
+Before ANY commit, you MUST run:
+```bash
+./scripts/security-preflight.sh
+```
+
+This script:
+- ✅ Scans all staged TypeScript/JavaScript files with Semgrep
+- ✅ Detects: XSS risks, hardcoded credentials, weak crypto, missing auth
+- ❌ BLOCKS commits if CRITICAL security issues are found
+- ✅ Shows detailed findings with fix suggestions
+- ✅ Re-scans after fixes to verify resolution
+
+### Security Rules Enforced
+
+1. **XSS Prevention (ERROR)** - `dangerouslySetInnerHTML` requires sanitization
+2. **Type Safety (WARNING)** - No `any` types allowed (project policy)
+3. **Weak Randomness (WARNING)** - `Math.random()` not allowed for security ops
+4. **Missing Auth (WARNING)** - Server actions must check authentication
+
+See `SECURITY_WORKFLOW.md` for complete documentation.
+
+### If Security Check Fails
+
+**DO NOT try to bypass this check. Instead:**
+1. Review the security findings shown in terminal
+2. Fix ALL critical issues in the reported files
+3. Stage your fixes: `git add <file>`
+4. Run `./scripts/security-preflight.sh` again
+5. Commit only when all critical issues are resolved
+
+### Pre-Commit Checklist
+
+Before committing, verify:
+- [x] **Security preflight check passed** (automatic)
 - [ ] No `any` types introduced
 - [ ] All user input validated with Zod
 - [ ] No hardcoded credentials
@@ -171,13 +208,20 @@ npm start               # Start production server
 
 ## Key Files Reference
 
+### Application Code
 - `src/lib/supabase/client.ts` - Browser Supabase client
 - `src/lib/supabase/server.ts` - Server Supabase client
 - `src/lib/supabase/middleware.ts` - Auth session update logic
 - `src/middleware.ts` - Next.js middleware (auth refresh)
 - `src/lib/validations/` - Zod validation schemas
 - `src/types/database.ts` - Generated Supabase types
+
+### Security & Documentation
+- `.semgrep.yml` - **Semgrep security rules** (XSS, auth, type safety, etc.)
+- `scripts/security-preflight.sh` - **Pre-commit security check script**
+- `SECURITY_WORKFLOW.md` - **Complete security workflow guide**
 - `SECURITY.md` - Security guidelines and best practices
+- `CLAUDE.md` - This file (architectural decisions and standards)
 - `.env.local.example` - Environment variable template
 
 ## Dependencies
@@ -220,11 +264,16 @@ npm start               # Start production server
 
 When working on this project:
 1. **Always read this file first** to understand the context
-2. **Never compromise on security rules** - they are non-negotiable
-3. **Follow the bulletproof pattern** for new features
-4. **Update this file** when making significant architectural decisions
-5. **Ask clarifying questions** before implementing ambiguous requirements
-6. **Check `SECURITY.md`** before implementing auth or data handling features
+2. **MANDATORY: Run `./scripts/security-preflight.sh` before EVERY commit**
+   - This is a hard requirement that CANNOT be bypassed
+   - If critical issues found, fix them before committing
+   - Never use `--no-verify` or attempt to skip this check
+3. **Never compromise on security rules** - they are non-negotiable
+4. **Follow the bulletproof pattern** for new features
+5. **Update this file** when making significant architectural decisions
+6. **Ask clarifying questions** before implementing ambiguous requirements
+7. **Check `SECURITY_WORKFLOW.md`** for security scanning details
+8. **Check `SECURITY.md`** before implementing auth or data handling features
 
 ## Last Updated
-2026-02-10 - Initial project setup
+2026-02-11 - Added Semgrep security scanning and mandatory pre-commit checks
