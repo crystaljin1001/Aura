@@ -22,6 +22,8 @@ export interface RepoProduct {
   pushedAt: string;
   metrics: ImpactMetric[];
   lastUpdated: Date | null;
+  demoCoverUrl?: string | null; // Optional demo video thumbnail/cover
+  demoVideoUrl?: string | null; // Optional demo video URL
 }
 
 interface RepoProductCardProps {
@@ -101,12 +103,132 @@ export function RepoProductCard({ product, featured = false }: RepoProductCardPr
     forks,
     pushedAt,
     metrics,
+    demoCoverUrl,
+    demoVideoUrl,
   } = product;
 
   const nonZeroMetrics = metrics.filter((m) => m.value > 0);
   const topMetrics = featured ? nonZeroMetrics.slice(0, 5) : nonZeroMetrics.slice(0, 3);
   const langDot = language ? (langColors[language] ?? 'bg-muted-foreground') : null;
 
+  // Use video-first layout if demo cover exists
+  const hasDemo = Boolean(demoCoverUrl);
+
+  // Video-first layout
+  if (hasDemo) {
+    return (
+      <div
+        className={cn(
+          'glass-card group relative flex flex-col overflow-hidden',
+          featured ? 'md:col-span-2' : '',
+        )}
+      >
+        {/* ---- Video Cover with Metric Overlays ---- */}
+        <div className="relative aspect-video overflow-hidden bg-muted">
+          <img
+            src={demoCoverUrl!}
+            alt={`${repo} demo`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+
+          {/* Metric overlays as badges */}
+          {topMetrics.length > 0 && (
+            <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 flex-wrap">
+              {topMetrics.slice(0, 3).map((m) => (
+                <div
+                  key={m.id}
+                  className="px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center gap-2"
+                >
+                  <span
+                    className={cn(
+                      'font-mono font-bold text-sm',
+                      metricColors[m.type] ?? 'text-foreground',
+                    )}
+                  >
+                    {m.value.toLocaleString()}
+                  </span>
+                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                    {m.title.replace(/^(Critical )?/, '')}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Play button overlay if video URL exists */}
+          {demoVideoUrl && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="w-16 h-16 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-foreground ml-1">
+                  <path d="M8 5v14l11-7z" />
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ---- Content below video ---- */}
+        <div className={cn('p-6', featured && 'p-8')}>
+          {/* Header: repo name + pushed-at */}
+          <div className="flex items-start justify-between gap-4 mb-2">
+            <div className="min-w-0 flex-1">
+              <a
+                href={`https://github.com/${owner}/${repo}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={cn(
+                  'block font-semibold text-foreground hover:text-accent transition-colors truncate',
+                  featured ? 'text-xl' : 'text-base',
+                )}
+              >
+                {repo}
+              </a>
+              <span className="text-xs text-muted-foreground font-mono">{owner}</span>
+            </div>
+            {pushedAt && (
+              <span className="shrink-0 text-xs text-muted-foreground font-mono">
+                {formatRelativeTime(pushedAt)}
+              </span>
+            )}
+          </div>
+
+          {/* Description */}
+          {description && (
+            <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
+              {description}
+            </p>
+          )}
+
+          {/* Footer: language + stars/forks */}
+          <div className="flex items-center justify-between pt-4 border-t border-border">
+            <div className="flex items-center gap-3">
+              {language && langDot && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <span className={cn('inline-block h-2 w-2 rounded-full', langDot)} />
+                  {language}
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+              <span className="flex items-center gap-1">
+                <StarIcon />
+                <span className="font-mono">{stars.toLocaleString()}</span>
+              </span>
+              <span className="flex items-center gap-1">
+                <ForkIcon />
+                <span className="font-mono">{forks.toLocaleString()}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Hover accent line */}
+        <div className="absolute bottom-0 left-0 right-0 h-px bg-accent/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      </div>
+    );
+  }
+
+  // Metric-first layout (fallback when no demo video)
   return (
     <div
       className={cn(
