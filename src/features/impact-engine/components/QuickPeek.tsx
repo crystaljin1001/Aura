@@ -12,7 +12,7 @@ import { RepoProductCard, type RepoProduct } from './RepoProductCard';
 import { RateLimitWarning } from './RateLimitWarning';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
-import { BentoGrid, BentoGridItem } from '@/components/ui/bento-grid';
+import { BentoGrid } from '@/components/ui/bento-grid';
 
 /* ------------------------------------------------------------------ */
 /*  Shared section header                                              */
@@ -239,55 +239,48 @@ export async function QuickPeek() {
         {/* Product bento grid */}
         <BentoGrid className="max-w-6xl mx-auto">
           {products.map((product, i) => (
-            <BentoGridItem
+            <div
               key={`${product.owner}/${product.repo}`}
-              title={`${product.owner}/${product.repo}`}
-              description={product.description || 'No description available'}
-              header={
-                <RepoProductCard
-                  product={product}
-                  featured={i === 0 && products.length > 1}
-                />
-              }
               className={
                 i === 0 && products.length > 1
                   ? "md:col-span-2 md:row-span-2"
                   : "md:col-span-1"
               }
-            />
+            >
+              <RepoProductCard
+                product={product}
+                featured={i === 0 && products.length > 1}
+              />
+            </div>
           ))}
 
           {/* Add more CTA */}
           {products.length < 10 && (
-            <BentoGridItem
-              title="Add Project"
-              description="Track more repositories"
-              header={
-                <Link
-                  href="/repositories"
-                  className="glass-card p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-foreground transition-colors group min-h-[160px]"
+            <div className="md:col-span-1">
+              <Link
+                href="/repositories"
+                className="glass-card p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-foreground transition-colors group min-h-[160px] h-full"
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 16 16"
+                  fill="none"
+                  aria-hidden="true"
+                  className="text-muted-foreground group-hover:text-foreground transition-colors"
                 >
-                  <svg
-                    width="24"
-                    height="24"
-                    viewBox="0 0 16 16"
-                    fill="none"
-                    aria-hidden="true"
-                    className="text-muted-foreground group-hover:text-foreground transition-colors"
-                  >
-                    <path
-                      d="M8 1v14M1 8h14"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                  <span className="font-mono text-xs uppercase tracking-wider">
-                    Add project
-                  </span>
-                </Link>
-              }
-            />
+                  <path
+                    d="M8 1v14M1 8h14"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                  />
+                </svg>
+                <span className="font-mono text-xs uppercase tracking-wider">
+                  Add project
+                </span>
+              </Link>
+            </div>
           )}
         </BentoGrid>
       </div>

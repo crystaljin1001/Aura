@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import { AuraBackground } from "@/components/layout/AuraBackground";
 
 export const metadata: Metadata = {
   title: "Aura | Proof of Work",
@@ -18,6 +19,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="font-sans antialiased bg-background text-foreground">
+        <AuraBackground />
         {children}
       </body>
     </html>
