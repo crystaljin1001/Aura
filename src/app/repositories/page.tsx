@@ -14,7 +14,7 @@ export default async function RepositoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background ">
+    <div className="min-h-screen">
       {/* Navigation */}
       <nav className="sticky top-0 z-50 border-b border-border backdrop-blur-xl bg-background/80">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
