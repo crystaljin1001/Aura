@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Builder's OS | Proof of Work",
+  title: "Aura | Proof of Work",
   description: "A high-signal portfolio platform for builders to showcase their impact through code.",
 };
 

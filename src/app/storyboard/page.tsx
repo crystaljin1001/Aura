@@ -22,7 +22,7 @@ export default async function StoryboardPage() {
             href="/"
             className="text-sm font-semibold text-foreground tracking-tight"
           >
-            Builder&apos;s OS
+            Aura
           </Link>
           <div className="flex items-center gap-6">
             <Link

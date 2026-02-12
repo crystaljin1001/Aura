@@ -4,7 +4,7 @@
  */
 
 export const siteConfig = {
-  name: "Builder's OS",
+  name: "Aura",
   description: 'A specialized portfolio platform for builders',
   url: process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000',
   links: {

@@ -74,7 +74,7 @@ export default function AuthPage() {
         <div className="glass-card p-8">
           <div className="text-center mb-8">
             <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
-              Builder&apos;s OS
+              Aura
             </p>
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">
               {isSignUp ? 'Create Account' : 'Sign In'}

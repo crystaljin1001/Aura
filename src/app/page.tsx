@@ -1,5 +1,4 @@
 import { QuickPeek } from '@/features/impact-engine/components/QuickPeek';
-import { Hero } from '@/components/layout/Hero';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
@@ -35,7 +34,7 @@ export default async function Home() {
             href="/"
             className="text-sm font-semibold text-foreground tracking-tight"
           >
-            Builder&apos;s OS
+            Aura
           </Link>
 
           {user ? (

@@ -1,10 +1,10 @@
-# Builder's OS - Claude Memory File
+# Aura - Claude Memory File
 
 This file persists architectural decisions, coding standards, and security rules across Claude sessions. Always reference this file when working on the project.
 
 ## Project Overview
 
-**Name:** Builder's OS (Aura)
+**Name:** Aura
 **Purpose:** A specialized portfolio platform for builders
 **Stack:** Next.js 14 (App Router), TypeScript, Tailwind CSS, Supabase
 
