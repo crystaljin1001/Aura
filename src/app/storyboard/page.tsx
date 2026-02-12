@@ -9,41 +9,44 @@ export default async function StoryboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect to auth if not signed in
   if (!user) {
     redirect('/auth');
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
+    <div className="min-h-screen bg-background grid-pattern">
       {/* Navigation */}
-      <nav className="py-4 px-6 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold hover:text-blue-600">
+      <nav className="sticky top-0 z-50 border-b border-border backdrop-blur-xl bg-background/80">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
+          <Link
+            href="/"
+            className="text-sm font-semibold text-foreground tracking-tight"
+          >
             Builder&apos;s OS
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <Link
               href="/"
-              className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Dashboard
             </Link>
             <Link
               href="/repositories"
-              className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Repositories
             </Link>
-            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="h-4 w-px bg-border" />
+            <span className="text-xs font-mono text-muted-foreground">
               {user.email}
             </span>
             <form action="/auth/signout" method="post">
               <button
                 type="submit"
-                className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
               >
-                Sign Out
+                Sign out
               </button>
             </form>
           </div>
@@ -51,19 +54,23 @@ export default async function StoryboardPage() {
       </nav>
 
       {/* Header */}
-      <section className="py-12 px-4">
-        <div className="max-w-7xl mx-auto text-center mb-8">
-          <h1 className="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
-            🎬 Narrative Storyboarder
-          </h1>
-          <p className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
-            Transform your project README into a compelling video demo script.
-            AI-powered, narrative-driven, and ready to record.
-          </p>
-        </div>
+      <section className="py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-10">
+            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
+              Narrative Engine
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground mb-2">
+              Storyboarder
+            </h1>
+            <p className="text-base text-muted-foreground max-w-xl">
+              Transform your project README into a compelling video demo script.
+              AI-powered, narrative-driven, and ready to record.
+            </p>
+          </div>
 
-        {/* Storyboard Form */}
-        <StoryboardForm />
+          <StoryboardForm />
+        </div>
       </section>
     </div>
   );

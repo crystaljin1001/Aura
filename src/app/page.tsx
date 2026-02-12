@@ -2,6 +2,23 @@ import { QuickPeek } from '@/features/impact-engine/components/QuickPeek';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
+function NavLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Link
+      href={href}
+      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+    >
+      {children}
+    </Link>
+  );
+}
+
 export default async function Home() {
   const supabase = await createClient();
   const {
@@ -9,41 +26,38 @@ export default async function Home() {
   } = await supabase.auth.getUser();
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
+    <div className="min-h-screen bg-background grid-pattern">
       {/* Navigation */}
-      <nav className="py-4 px-6 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <h2 className="text-xl font-bold">Builder&apos;s OS</h2>
+      <nav className="sticky top-0 z-50 border-b border-border backdrop-blur-xl bg-background/80">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
+          <Link
+            href="/"
+            className="text-sm font-semibold text-foreground tracking-tight"
+          >
+            Builder&apos;s OS
+          </Link>
+
           {user ? (
-            <div className="flex items-center gap-4">
-              <Link
-                href="/repositories"
-                className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-              >
-                Repositories
-              </Link>
-              <Link
-                href="/storyboard"
-                className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
-              >
-                Storyboard
-              </Link>
-              <span className="text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="flex items-center gap-6">
+              <NavLink href="/repositories">Repositories</NavLink>
+              <NavLink href="/storyboard">Storyboard</NavLink>
+              <div className="h-4 w-px bg-border" />
+              <span className="text-xs font-mono text-muted-foreground">
                 {user.email}
               </span>
               <form action="/auth/signout" method="post">
                 <button
                   type="submit"
-                  className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                  className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
                 >
-                  Sign Out
+                  Sign out
                 </button>
               </form>
             </div>
           ) : (
             <Link
               href="/auth"
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
+              className="px-4 py-1.5 bg-foreground text-background text-sm font-medium rounded-lg hover:bg-foreground/90 transition-colors"
             >
               Sign In
             </Link>
@@ -54,34 +68,42 @@ export default async function Home() {
       {/* Impact Engine Dashboard */}
       <QuickPeek />
 
-      {/* Hero Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto text-center">
-          <h1 className="text-5xl font-bold mb-6 text-black dark:text-white">
-            Builder&apos;s OS
-          </h1>
-          <p className="text-xl text-zinc-600 dark:text-zinc-400 mb-8">
-            A specialized portfolio platform for builders to showcase their
-            impact
-          </p>
-          {!user && (
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      {/* Hero Section - shown for all users, serves as the brand anchor */}
+      {!user && (
+        <section className="py-32 px-4">
+          <div className="max-w-3xl mx-auto text-center">
+            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-6">
+              For builders who ship
+            </p>
+            <h1 className="text-5xl md:text-7xl font-bold tracking-tight text-foreground text-balance leading-[1.1]">
+              Your code.
+              <br />
+              <span className="text-muted-foreground">Quantified.</span>
+            </h1>
+            <p className="mt-6 text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
+              A high-signal portfolio that transforms your GitHub activity into
+              compelling proof of work. No fluff, just impact.
+            </p>
+            <div className="mt-10 flex flex-col sm:flex-row gap-3 justify-center">
               <Link
                 href="/auth"
-                className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+                className="px-8 py-3 bg-foreground text-background font-medium text-sm rounded-lg hover:bg-foreground/90 transition-colors"
               >
                 Get Started
               </Link>
               <a
                 href="#about"
-                className="px-8 py-3 border border-zinc-300 dark:border-zinc-600 hover:bg-zinc-100 dark:hover:bg-zinc-800 text-zinc-900 dark:text-zinc-100 font-medium rounded-lg transition-colors"
+                className="px-8 py-3 border border-border text-foreground font-medium text-sm rounded-lg hover:bg-glass-hover transition-colors"
               >
                 Learn More
               </a>
             </div>
-          )}
-        </div>
-      </section>
+          </div>
+        </section>
+      )}
+
+      {/* Spacer for authenticated users */}
+      {user && <div className="pb-16" />}
     </div>
   );
 }

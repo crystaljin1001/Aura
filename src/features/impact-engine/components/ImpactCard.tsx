@@ -1,90 +1,94 @@
 /**
  * Impact Card component
- * Displays individual impact metric with icon, value, and description
+ * Displays individual impact metric in a glassmorphism card
+ * with prominent metric value as the hero element
  */
 
 import type { ImpactMetric } from '@/types';
+import { cn } from '@/utils/cn';
 
 interface ImpactCardProps {
   metric: ImpactMetric;
-  variant?: 'compact' | 'detailed';
+  variant?: 'compact' | 'detailed' | 'hero';
 }
+
+/** Accent dot color per metric type */
+const accentColors: Record<string, string> = {
+  issues_resolved: 'bg-red-500',
+  performance: 'bg-amber-500',
+  users: 'bg-accent',
+  quality: 'bg-emerald-500',
+  features: 'bg-cyan-500',
+};
+
+/** Subtle glow color per metric type for the value */
+const valueGlows: Record<string, string> = {
+  issues_resolved: 'text-red-400',
+  performance: 'text-amber-400',
+  users: 'text-accent',
+  quality: 'text-emerald-400',
+  features: 'text-cyan-400',
+};
 
 export function ImpactCard({ metric, variant = 'detailed' }: ImpactCardProps) {
   const isCompact = variant === 'compact';
+  const isHero = variant === 'hero';
+  const dotColor = accentColors[metric.type] ?? 'bg-muted-foreground';
+  const valueColor = valueGlows[metric.type] ?? 'text-foreground';
 
-  // Gradient colors based on metric type
-  const gradients = {
-    issues_resolved: 'from-red-500 to-pink-500',
-    performance: 'from-yellow-500 to-orange-500',
-    users: 'from-blue-500 to-cyan-500',
-    quality: 'from-purple-500 to-pink-500',
-    features: 'from-green-500 to-emerald-500',
-  };
+  const trendArrow =
+    metric.trend === 'up' ? '\u2191' : metric.trend === 'down' ? '\u2193' : null;
 
-  const gradient = gradients[metric.type] || 'from-gray-500 to-gray-600';
-
-  // Trend indicator
-  const trendIndicator = metric.trend ? (
-    <span
-      className={`text-xs ${
-        metric.trend === 'up'
-          ? 'text-green-600 dark:text-green-400'
-          : metric.trend === 'down'
-            ? 'text-red-600 dark:text-red-400'
-            : 'text-gray-600 dark:text-gray-400'
-      }`}
-    >
-      {metric.trend === 'up' ? '↑' : metric.trend === 'down' ? '↓' : '→'}
-    </span>
-  ) : null;
+  const trendColor =
+    metric.trend === 'up'
+      ? 'text-success'
+      : metric.trend === 'down'
+        ? 'text-destructive'
+        : 'text-muted-foreground';
 
   return (
     <div
-      className={`
-        group relative overflow-hidden rounded-xl
-        bg-gradient-to-br ${gradient}
-        p-6 text-white shadow-lg
-        transition-all duration-300 ease-in-out
-        hover:shadow-2xl hover:scale-105
-        ${isCompact ? 'p-4' : 'p-6'}
-      `}
+      className={cn(
+        'glass-card group relative flex flex-col justify-between overflow-hidden',
+        isHero ? 'p-8' : isCompact ? 'p-4' : 'p-6',
+      )}
     >
-      {/* Background pattern */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute inset-0 bg-gradient-to-br from-white to-transparent" />
-      </div>
-
-      {/* Content */}
-      <div className="relative">
-        {/* Icon and Trend */}
-        <div className="flex items-start justify-between mb-4">
-          <span className={`${isCompact ? 'text-3xl' : 'text-4xl'}`}>
-            {metric.icon}
+      {/* Header row: dot label + trend */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-2">
+          <span className={cn('inline-block h-2 w-2 rounded-full', dotColor)} />
+          <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {metric.title}
           </span>
-          {trendIndicator}
         </div>
-
-        {/* Value */}
-        <div className={`font-bold mb-2 ${isCompact ? 'text-2xl' : 'text-3xl'}`}>
-          {metric.value.toLocaleString()}
-        </div>
-
-        {/* Title */}
-        <h3 className={`font-semibold mb-1 ${isCompact ? 'text-sm' : 'text-base'}`}>
-          {metric.title}
-        </h3>
-
-        {/* Description */}
-        {!isCompact && (
-          <p className="text-sm opacity-90 leading-relaxed">
-            {metric.description}
-          </p>
+        {trendArrow && (
+          <span className={cn('text-xs font-mono font-medium', trendColor)}>
+            {trendArrow}
+          </span>
         )}
       </div>
 
-      {/* Hover effect overlay */}
-      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-5 transition-opacity duration-300" />
+      {/* Hero metric value */}
+      <div
+        className={cn(
+          'font-mono font-bold tracking-tight leading-none',
+          isHero ? 'text-6xl' : isCompact ? 'text-3xl' : 'text-5xl',
+          valueColor,
+          isHero && 'metric-glow',
+        )}
+      >
+        {metric.value.toLocaleString()}
+      </div>
+
+      {/* Description */}
+      {!isCompact && (
+        <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+          {metric.description}
+        </p>
+      )}
+
+      {/* Subtle bottom highlight on hover */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-border-hover opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </div>
   );
 }
