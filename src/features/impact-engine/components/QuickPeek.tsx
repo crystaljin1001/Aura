@@ -1,36 +1,22 @@
 /**
- * QuickPeek component - Server Component
- * Bento-grid dashboard for impact metrics with glassmorphism cards
+ * QuickPeek - Server Component
+ * Portfolio-style dashboard that treats each repo as a "product".
+ * Fetches real impact data and renders a responsive bento grid.
  */
 
-import { hasGitHubToken } from '../api/actions';
+import { hasGitHubToken, getImpactData } from '../api/actions';
 import { getUserRepositories } from '../api/repository-actions';
 import { PatTokenForm } from './PatTokenForm';
 import { RepositoryManager } from './RepositoryManager';
+import { RepoProductCard, type RepoProduct } from './RepoProductCard';
+import { RateLimitWarning } from './RateLimitWarning';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
-/** Decorative SVG icon for repo rows */
-function RepoIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 16 16"
-      fill="none"
-      aria-hidden="true"
-      className="text-muted-foreground"
-    >
-      <path
-        d="M2 2.5A2.5 2.5 0 014.5 0h8.75a.75.75 0 01.75.75v12.5a.75.75 0 01-.75.75h-2.5a.75.75 0 110-1.5h1.75v-2h-8a1 1 0 00-.714 1.7.75.75 0 01-1.072 1.05A2.495 2.495 0 012 11.5v-9z"
-        fill="currentColor"
-        fillOpacity="0.5"
-      />
-    </svg>
-  );
-}
+/* ------------------------------------------------------------------ */
+/*  Shared section header                                              */
+/* ------------------------------------------------------------------ */
 
-/** Section header shared across states */
 function SectionHeader({
   title,
   description,
@@ -53,20 +39,62 @@ function SectionHeader({
   );
 }
 
+/* ------------------------------------------------------------------ */
+/*  Aggregate stats row                                                */
+/* ------------------------------------------------------------------ */
+
+function AggregateStats({ products }: { products: RepoProduct[] }) {
+  const totalMetrics = products.flatMap((p) => p.metrics);
+  const totalStars = products.reduce((s, p) => s + p.stars, 0);
+  const totalForks = products.reduce((s, p) => s + p.forks, 0);
+
+  const byType = (type: string) =>
+    totalMetrics.filter((m) => m.type === type).reduce((s, m) => s + m.value, 0);
+
+  const stats = [
+    { label: 'Stars', value: totalStars, color: 'text-amber-400' },
+    { label: 'Forks', value: totalForks, color: 'text-blue-400' },
+    { label: 'Issues Fixed', value: byType('issues_resolved'), color: 'text-red-400' },
+    { label: 'Features', value: byType('features'), color: 'text-cyan-400' },
+    { label: 'Quality Fixes', value: byType('quality'), color: 'text-emerald-400' },
+  ].filter((s) => s.value > 0);
+
+  if (stats.length === 0) return null;
+
+  return (
+    <div className="glass-card p-6 md:p-8 mb-4">
+      <div className="flex flex-wrap gap-x-10 gap-y-4">
+        {stats.map((s) => (
+          <div key={s.label} className="flex flex-col">
+            <span className={`font-mono font-bold text-3xl md:text-4xl tracking-tight leading-none ${s.color}`}>
+              {s.value.toLocaleString()}
+            </span>
+            <span className="mt-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+              {s.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  Main component                                                     */
+/* ------------------------------------------------------------------ */
+
 export async function QuickPeek() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   const tokenResult = await hasGitHubToken();
   const hasToken = tokenResult.data;
 
-  /* ---------- State: No GitHub token ---------- */
+  /* -------- State: No GitHub token -------- */
   if (!hasToken) {
     return (
       <section className="w-full py-16 px-4">
@@ -81,7 +109,7 @@ export async function QuickPeek() {
     );
   }
 
-  /* ---------- State: No repositories ---------- */
+  /* -------- State: No repositories -------- */
   const reposResult = await getUserRepositories();
 
   if (
@@ -102,111 +130,126 @@ export async function QuickPeek() {
     );
   }
 
-  /* ---------- State: Dashboard with repos ---------- */
+  /* -------- Fetch impact data for all repos -------- */
   const repos = reposResult.data;
+  const impactResult = await getImpactData(repos);
 
+  // Build product objects by pairing repo identifiers with impact data + cached metadata
+  const products: RepoProduct[] = [];
+
+  if (impactResult.success && impactResult.data) {
+    for (const repoId of repos) {
+      const fullName = `${repoId.owner}/${repoId.repo}`;
+      const impact = impactResult.data.find((d) => d.repoFullName === fullName);
+
+      // Try to pull cached repo_data for richer metadata
+      let description: string | null = null;
+      let language: string | null = null;
+      let stars = 0;
+      let forks = 0;
+      let openIssues = 0;
+      let pushedAt = '';
+
+      const { data: cached } = await supabase
+        .from('impact_cache')
+        .select('repo_data')
+        .eq('user_id', user.id)
+        .eq('repo_full_name', fullName)
+        .single();
+
+      if (cached?.repo_data) {
+        const rd = cached.repo_data as Record<string, unknown>;
+        description = (rd.description as string) || null;
+        language = (rd.language as string) || null;
+        stars = Number(rd.stargazersCount) || 0;
+        forks = Number(rd.forksCount) || 0;
+        openIssues = Number(rd.openIssuesCount) || 0;
+        pushedAt = (rd.pushedAt as string) || '';
+      }
+
+      products.push({
+        owner: repoId.owner,
+        repo: repoId.repo,
+        description,
+        language,
+        stars,
+        forks,
+        openIssues,
+        pushedAt,
+        metrics: impact?.metrics ?? [],
+        lastUpdated: impact?.lastUpdated ?? null,
+      });
+    }
+  } else {
+    // Fallback: no impact data but we still know which repos exist
+    for (const repoId of repos) {
+      products.push({
+        owner: repoId.owner,
+        repo: repoId.repo,
+        description: null,
+        language: null,
+        stars: 0,
+        forks: 0,
+        openIssues: 0,
+        pushedAt: '',
+        metrics: [],
+        lastUpdated: null,
+      });
+    }
+  }
+
+  /* -------- Render: Portfolio -------- */
   return (
     <section className="w-full py-16 px-4">
       <div className="max-w-6xl mx-auto">
+        {/* Header row */}
         <div className="flex items-end justify-between mb-10">
           <div>
             <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
               Proof of Work
             </p>
             <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              Impact Dashboard
+              Portfolio
             </h2>
+            <p className="mt-2 text-base text-muted-foreground">
+              {products.length} {products.length === 1 ? 'project' : 'projects'} tracked
+            </p>
           </div>
           <Link
             href="/repositories"
             className="text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
           >
-            Manage repos
+            Manage
           </Link>
         </div>
 
-        {/* Bento Grid - Responsive */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {/* Summary hero card - spans 2 cols on md+ */}
-          <div className="glass-card p-8 md:col-span-2 lg:col-span-2 flex flex-col justify-between">
-            <div>
-              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2">
-                Connected
-              </p>
-              <div className="flex items-baseline gap-3">
-                <span className="text-6xl font-mono font-bold tracking-tight text-foreground metric-glow">
-                  {repos.length}
-                </span>
-                <span className="text-lg text-muted-foreground">
-                  {repos.length === 1 ? 'repository' : 'repositories'}
-                </span>
-              </div>
-            </div>
-            <p className="mt-6 text-sm text-muted-foreground leading-relaxed">
-              Impact metrics are cached for 24 hours. Data refreshes
-              automatically on your next visit after the cache expires.
-            </p>
-          </div>
+        {/* Rate limit warning */}
+        <div className="mb-4">
+          <RateLimitWarning />
+        </div>
 
-          {/* Status card */}
-          <div className="glass-card p-8 flex flex-col justify-between">
-            <div>
-              <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2">
-                Pipeline
-              </p>
-              <p className="text-2xl font-semibold text-foreground tracking-tight">
-                Active
-              </p>
-            </div>
-            <div className="mt-6 flex items-center gap-2">
-              <span className="relative flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-success opacity-75" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-success" />
-              </span>
-              <span className="text-xs text-muted-foreground font-mono">
-                Tracking live
-              </span>
-            </div>
-          </div>
+        {/* Aggregate stats row */}
+        <AggregateStats products={products} />
 
-          {/* Repository cards */}
-          {repos.map((repo) => (
-            <div
-              key={`${repo.owner}/${repo.repo}`}
-              className="glass-card p-6 flex flex-col gap-4"
-            >
-              <div className="flex items-center gap-3">
-                <RepoIcon />
-                <a
-                  href={`https://github.com/${repo.owner}/${repo.repo}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm font-mono text-foreground hover:text-accent transition-colors truncate"
-                >
-                  {repo.owner}/{repo.repo}
-                </a>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-muted-foreground">
-                  Ready to track
-                </span>
-                <span className="flex items-center gap-1.5 text-xs font-mono text-success">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-success" />
-                  Connected
-                </span>
-              </div>
-            </div>
+        {/* Product bento grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {products.map((product, i) => (
+            <RepoProductCard
+              key={`${product.owner}/${product.repo}`}
+              product={product}
+              featured={i === 0 && products.length > 1}
+            />
           ))}
 
-          {/* CTA to add more repos if under limit */}
-          {repos.length < 10 && (
+          {/* Add more CTA */}
+          {products.length < 10 && (
             <Link
               href="/repositories"
-              className="glass-card p-6 flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors group"
+              className="glass-card p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-foreground transition-colors group min-h-[160px]"
             >
               <svg
-                width="16"
-                height="16"
+                width="24"
+                height="24"
                 viewBox="0 0 16 16"
                 fill="none"
                 aria-hidden="true"
@@ -220,7 +263,7 @@ export async function QuickPeek() {
                 />
               </svg>
               <span className="font-mono text-xs uppercase tracking-wider">
-                Add repository
+                Add project
               </span>
             </Link>
           )}
