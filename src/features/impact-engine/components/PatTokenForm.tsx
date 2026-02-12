@@ -2,7 +2,7 @@
 
 /**
  * GitHub Personal Access Token input form
- * Allows users to securely store their GitHub PAT
+ * Glassmorphism card with Linear-style form inputs
  */
 
 import { useState } from 'react';
@@ -27,10 +27,9 @@ export function PatTokenForm() {
       if (result.success) {
         setMessage({
           type: 'success',
-          text: 'GitHub token saved successfully! Refreshing page...',
+          text: 'Token saved. Refreshing...',
         });
         setToken('');
-        // Refresh the page to show impact data
         setTimeout(() => window.location.reload(), 1500);
       } else {
         setMessage({
@@ -49,20 +48,21 @@ export function PatTokenForm() {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-2">Connect Your GitHub</h2>
-      <p className="text-gray-600 dark:text-gray-400 mb-6">
-        Add your GitHub Personal Access Token to display your project impact
-        metrics.
+    <div className="w-full max-w-2xl mx-auto glass-card p-8">
+      <h2 className="text-xl font-semibold text-foreground tracking-tight mb-1">
+        Connect GitHub
+      </h2>
+      <p className="text-sm text-muted-foreground mb-8">
+        Add your Personal Access Token to surface project impact metrics.
       </p>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label
             htmlFor="github-token"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+            className="block text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2"
           >
-            GitHub Personal Access Token
+            Personal Access Token
           </label>
           <input
             id="github-token"
@@ -72,28 +72,27 @@ export function PatTokenForm() {
             placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
             disabled={isLoading}
             required
-            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 bg-muted border border-border rounded-lg font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           />
-          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-            Your token is encrypted and stored securely. We only use it to fetch
-            your repository data.
+          <p className="mt-2 text-xs text-muted-foreground">
+            Encrypted and stored securely. Used only to fetch repository data.
           </p>
         </div>
 
         <button
           type="submit"
           disabled={isLoading || !token}
-          className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-6 py-3 bg-foreground text-background font-medium text-sm rounded-lg hover:bg-foreground/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {isLoading ? 'Saving...' : 'Save Token'}
         </button>
 
         {message && (
           <div
-            className={`p-4 rounded-lg ${
+            className={`p-4 rounded-lg border text-sm ${
               message.type === 'success'
-                ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200'
-                : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'
+                ? 'border-success/30 bg-success/5 text-success'
+                : 'border-destructive/30 bg-destructive/5 text-destructive'
             }`}
           >
             {message.text}
@@ -101,16 +100,16 @@ export function PatTokenForm() {
         )}
       </form>
 
-      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-        <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">
-          How to create a GitHub token:
+      <div className="mt-8 p-4 rounded-lg border border-border bg-muted/50">
+        <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
+          How to create a token
         </h3>
-        <ol className="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-decimal list-inside">
-          <li>Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)</li>
+        <ol className="text-sm text-muted-foreground space-y-1.5 list-decimal list-inside leading-relaxed">
+          <li>{'Go to GitHub Settings > Developer settings > Personal access tokens > Tokens (classic)'}</li>
           <li>Click &quot;Generate new token (classic)&quot;</li>
-          <li>Give it a name and select &quot;repo&quot; scope</li>
+          <li>{'Give it a name and select the "repo" scope'}</li>
           <li>Click &quot;Generate token&quot; and copy it</li>
-          <li>Paste it here</li>
+          <li>Paste it above</li>
         </ol>
       </div>
     </div>

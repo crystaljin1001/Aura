@@ -9,41 +9,44 @@ export default async function RepositoriesPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Redirect to auth if not signed in
   if (!user) {
     redirect('/auth');
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
+    <div className="min-h-screen bg-background grid-pattern">
       {/* Navigation */}
-      <nav className="py-4 px-6 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/" className="text-xl font-bold hover:text-blue-600">
+      <nav className="sticky top-0 z-50 border-b border-border backdrop-blur-xl bg-background/80">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-14">
+          <Link
+            href="/"
+            className="text-sm font-semibold text-foreground tracking-tight"
+          >
             Builder&apos;s OS
           </Link>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <Link
               href="/"
-              className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Dashboard
             </Link>
             <Link
               href="/storyboard"
-              className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               Storyboard
             </Link>
-            <span className="text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="h-4 w-px bg-border" />
+            <span className="text-xs font-mono text-muted-foreground">
               {user.email}
             </span>
             <form action="/auth/signout" method="post">
               <button
                 type="submit"
-                className="text-sm text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+                className="text-xs font-mono text-muted-foreground hover:text-foreground transition-colors"
               >
-                Sign Out
+                Sign out
               </button>
             </form>
           </div>
@@ -51,8 +54,16 @@ export default async function RepositoriesPage() {
       </nav>
 
       {/* Repository Manager */}
-      <section className="py-12 px-4">
-        <div className="max-w-7xl mx-auto">
+      <section className="py-16 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="mb-10">
+            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
+              Settings
+            </p>
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              Repositories
+            </h1>
+          </div>
           <RepositoryManager />
         </div>
       </section>

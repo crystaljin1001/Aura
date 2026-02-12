@@ -69,23 +69,28 @@ export default function AuthPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-zinc-900 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-background grid-pattern px-4">
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-zinc-800 rounded-lg shadow-lg p-8">
-          <h1 className="text-3xl font-bold mb-2 text-center">
-            {isSignUp ? 'Create Account' : 'Sign In'}
-          </h1>
-          <p className="text-zinc-600 dark:text-zinc-400 text-center mb-8">
-            {isSignUp
-              ? 'Create an account to get started'
-              : 'Welcome back! Please sign in to continue'}
-          </p>
+        <div className="glass-card p-8">
+          <div className="text-center mb-8">
+            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
+              Builder&apos;s OS
+            </p>
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              {isSignUp ? 'Create Account' : 'Sign In'}
+            </h1>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {isSignUp
+                ? 'Create an account to get started'
+                : 'Welcome back. Sign in to continue.'}
+            </p>
+          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <div>
               <label
                 htmlFor="email"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
+                className="block text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2"
               >
                 Email
               </label>
@@ -97,14 +102,14 @@ export default function AuthPage() {
                 placeholder="you@example.com"
                 disabled={isLoading}
                 required
-                className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-zinc-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               />
             </div>
 
             <div>
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2"
+                className="block text-xs font-mono uppercase tracking-widest text-muted-foreground mb-2"
               >
                 Password
               </label>
@@ -113,28 +118,28 @@ export default function AuthPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
+                placeholder="Min. 6 characters"
                 disabled={isLoading}
                 required
                 minLength={6}
-                className="w-full px-4 py-2 border border-zinc-300 dark:border-zinc-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-zinc-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               />
             </div>
 
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-6 py-3 bg-foreground text-background font-medium text-sm rounded-lg hover:bg-foreground/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {isLoading ? 'Loading...' : isSignUp ? 'Sign Up' : 'Sign In'}
             </button>
 
             {message && (
               <div
-                className={`p-4 rounded-lg ${
+                className={`p-4 rounded-lg border text-sm ${
                   message.type === 'success'
-                    ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200'
-                    : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'
+                    ? 'border-success/30 bg-success/5 text-success'
+                    : 'border-destructive/30 bg-destructive/5 text-destructive'
                 }`}
               >
                 {message.text}
@@ -148,7 +153,7 @@ export default function AuthPage() {
                 setIsSignUp(!isSignUp);
                 setMessage(null);
               }}
-              className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               {isSignUp
                 ? 'Already have an account? Sign in'

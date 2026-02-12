@@ -2,7 +2,7 @@
 
 /**
  * Repository Manager Component
- * Allows users to add and remove repositories they want to track
+ * Glassmorphism-styled repository management with Linear aesthetics
  */
 
 import { useState, useEffect } from 'react';
@@ -28,7 +28,6 @@ export function RepositoryManager() {
     text: string;
   } | null>(null);
 
-  // Load repositories on mount
   useEffect(() => {
     loadRepositories();
   }, []);
@@ -48,19 +47,17 @@ export function RepositoryManager() {
     setMessage(null);
 
     try {
-      // Parse the input (supports URLs or owner/repo format)
       const parsed = parseGitHubUrl(inputValue.trim());
 
       if (!parsed) {
         setMessage({
           type: 'error',
-          text: 'Invalid format. Use "owner/repo" or GitHub URL',
+          text: 'Invalid format. Use "owner/repo" or a GitHub URL.',
         });
         setIsLoading(false);
         return;
       }
 
-      // Add repository
       const result = await addRepository(parsed.owner, parsed.repo);
 
       if (result.success) {
@@ -69,7 +66,6 @@ export function RepositoryManager() {
           text: `Added ${parsed.owner}/${parsed.repo}`,
         });
         setInputValue('');
-        // Reload list and refresh page to show new data
         await loadRepositories();
         setTimeout(() => window.location.reload(), 1500);
       } else {
@@ -98,7 +94,6 @@ export function RepositoryManager() {
         type: 'success',
         text: `Removed ${owner}/${repo}`,
       });
-      // Reload list and refresh page
       await loadRepositories();
       setTimeout(() => window.location.reload(), 1500);
     } else {
@@ -110,44 +105,45 @@ export function RepositoryManager() {
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-2">Manage Repositories</h2>
-      <p className="text-gray-600 dark:text-gray-400 mb-6">
-        Add repositories you want to track on your Impact Dashboard
+    <div className="w-full max-w-4xl mx-auto glass-card p-8">
+      <h2 className="text-xl font-semibold text-foreground tracking-tight mb-1">
+        Manage Repositories
+      </h2>
+      <p className="text-sm text-muted-foreground mb-8">
+        Add repositories you want to track on your Impact Dashboard.
       </p>
 
       {/* Add Repository Form */}
       <form onSubmit={handleAdd} className="mb-8">
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <input
             type="text"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
             placeholder="owner/repo or https://github.com/owner/repo"
             disabled={isLoading}
-            className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
+            className="flex-1 px-4 py-3 bg-muted border border-border rounded-lg font-mono text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent disabled:opacity-50 transition-colors"
           />
           <button
             type="submit"
             disabled={isLoading || !inputValue.trim()}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-6 py-3 bg-foreground text-background font-medium text-sm rounded-lg hover:bg-foreground/90 transition-colors disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           >
             {isLoading ? 'Adding...' : 'Add'}
           </button>
         </div>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-          Examples: crystaljin1001/Maestro or
-          https://github.com/crystaljin1001/Maestro
+        <p className="mt-2 text-xs text-muted-foreground font-mono">
+          {'e.g. crystaljin1001/Maestro or https://github.com/crystaljin1001/Maestro'}
         </p>
       </form>
 
       {/* Message */}
       {message && (
         <div
-          className={`mb-6 p-4 rounded-lg ${
+          className={`mb-6 p-4 rounded-lg border text-sm ${
             message.type === 'success'
-              ? 'bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200'
-              : 'bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200'
+              ? 'border-success/30 bg-success/5 text-success'
+              : 'border-destructive/30 bg-destructive/5 text-destructive'
           }`}
         >
           {message.text}
@@ -156,34 +152,45 @@ export function RepositoryManager() {
 
       {/* Repository List */}
       <div>
-        <h3 className="text-lg font-semibold mb-4">
-          Your Repositories ({repositories.length}/10)
-        </h3>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xs font-mono uppercase tracking-widest text-muted-foreground">
+            Your Repositories
+          </h3>
+          <span className="text-xs font-mono text-muted-foreground">
+            {repositories.length}/10
+          </span>
+        </div>
 
         {isLoadingList ? (
-          <p className="text-gray-500 dark:text-gray-400">Loading...</p>
+          <div className="flex items-center gap-2 py-8 justify-center">
+            <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-pulse" />
+            <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-pulse [animation-delay:150ms]" />
+            <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground animate-pulse [animation-delay:300ms]" />
+          </div>
         ) : repositories.length === 0 ? (
-          <p className="text-gray-500 dark:text-gray-400 italic">
-            No repositories added yet. Add one above to get started!
-          </p>
+          <div className="py-12 text-center">
+            <p className="text-sm text-muted-foreground">
+              No repositories yet. Add one above to get started.
+            </p>
+          </div>
         ) : (
-          <ul className="space-y-2">
+          <ul className="divide-y divide-border">
             {repositories.map((repo) => (
               <li
                 key={`${repo.owner}/${repo.repo}`}
-                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                className="flex items-center justify-between py-3 group"
               >
                 <a
                   href={`https://github.com/${repo.owner}/${repo.repo}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 font-medium"
+                  className="text-sm font-mono text-foreground hover:text-accent transition-colors"
                 >
                   {repo.owner}/{repo.repo}
                 </a>
                 <button
                   onClick={() => handleRemove(repo.owner, repo.repo)}
-                  className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 text-sm font-medium"
+                  className="text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
                 >
                   Remove
                 </button>
