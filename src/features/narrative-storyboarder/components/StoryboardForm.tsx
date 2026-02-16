@@ -13,9 +13,14 @@ import { ScriptDisplay } from './ScriptDisplay';
 import type { NarrativeScript } from '../types';
 import type { RepoIdentifier } from '@/lib/validations/impact-engine';
 
-export function StoryboardForm() {
+interface StoryboardFormProps {
+  preSelectedRepo?: string
+  onComplete?: () => void
+}
+
+export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormProps = {}) {
   const [repositories, setRepositories] = useState<RepoIdentifier[]>([]);
-  const [selectedRepo, setSelectedRepo] = useState<string>('');
+  const [selectedRepo, setSelectedRepo] = useState<string>(preSelectedRepo || '');
   const [projectName, setProjectName] = useState('');
   const [readmeContent, setReadmeContent] = useState('');
   const [isFetchingReadme, setIsFetchingReadme] = useState(false);
@@ -28,6 +33,13 @@ export function StoryboardForm() {
   useEffect(() => {
     loadRepositories();
   }, []);
+
+  // Auto-fetch README if preSelectedRepo is provided
+  useEffect(() => {
+    if (preSelectedRepo && !readmeContent) {
+      handleFetchReadme();
+    }
+  }, [preSelectedRepo]);
 
   const loadRepositories = async () => {
     const result = await getUserRepositories();
@@ -68,10 +80,11 @@ export function StoryboardForm() {
     setGeneratedScript(null);
 
     try {
-      const result = await generateScript(projectName, readmeContent);
+      const result = await generateScript(projectName, readmeContent, selectedRepo || preSelectedRepo);
 
       if (result.success && result.data) {
         setGeneratedScript(result.data);
+        // Don't auto-close - let user read and close manually
       } else {
         setError(result.error || 'Failed to generate script');
       }
@@ -92,7 +105,17 @@ export function StoryboardForm() {
     return (
       <div>
         <ScriptDisplay script={generatedScript} projectName={projectName} />
-        <div className="mt-8 text-center">
+        <div className="mt-8 flex gap-4 justify-center">
+          <button
+            onClick={() => {
+              if (onComplete) {
+                onComplete();
+              }
+            }}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+          >
+            Done
+          </button>
           <button
             onClick={handleReset}
             className="px-6 py-3 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition-colors"
@@ -106,11 +129,11 @@ export function StoryboardForm() {
 
   return (
     <div className="w-full max-w-4xl mx-auto">
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-8">
-        <h2 className="text-2xl font-bold mb-2 text-gray-900 dark:text-white">
+      <div className="rounded-lg p-8">
+        <h2 className="text-2xl font-bold mb-2 text-foreground">
           Create Your Video Demo Script
         </h2>
-        <p className="text-gray-600 dark:text-gray-400 mb-6">
+        <p className="text-muted-foreground mb-6">
           Select a connected repository to fetch its README, or write your own.
           Then generate a professionally structured video script.
         </p>
@@ -121,7 +144,7 @@ export function StoryboardForm() {
             <div>
               <label
                 htmlFor="repository"
-                className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+                className="block text-sm font-medium text-foreground mb-2"
               >
                 📂 Select Repository (Optional)
               </label>
@@ -131,7 +154,7 @@ export function StoryboardForm() {
                   value={selectedRepo}
                   onChange={(e) => setSelectedRepo(e.target.value)}
                   disabled={isFetchingReadme || isGenerating}
-                  className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50"
+                  className="flex-1 px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent bg-background text-foreground disabled:opacity-50"
                 >
                   <option value="">-- Choose a repository --</option>
                   {repositories.map((repo) => (
@@ -194,7 +217,7 @@ export function StoryboardForm() {
                 </button>
               </div>
               {fetchedFrom && (
-                <p className="mt-2 text-sm text-green-600 dark:text-green-400">
+                <p className="mt-2 text-sm text-green-400">
                   ✓ Fetched from {fetchedFrom} - You can edit it below before
                   generating
                 </p>
@@ -206,7 +229,7 @@ export function StoryboardForm() {
           <div>
             <label
               htmlFor="projectName"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               Project Name *
             </label>
@@ -219,7 +242,7 @@ export function StoryboardForm() {
               disabled={isGenerating}
               required
               maxLength={200}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
 
@@ -227,7 +250,7 @@ export function StoryboardForm() {
           <div>
             <label
               htmlFor="readmeContent"
-              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+              className="block text-sm font-medium text-foreground mb-2"
             >
               Project README *
             </label>
@@ -241,9 +264,9 @@ export function StoryboardForm() {
               minLength={50}
               maxLength={10000}
               rows={12}
-              className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-700 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm"
+              className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm"
             />
-            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            <p className="mt-2 text-sm text-muted-foreground">
               {readmeContent.length}/10,000 characters • Minimum 50 characters
               {fetchedFrom && ' • Editable'}
             </p>
@@ -251,8 +274,8 @@ export function StoryboardForm() {
 
           {/* Error Message */}
           {error && (
-            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <p className="text-red-800 dark:text-red-200">{error}</p>
+            <div className="p-4 bg-red-900/20 border border-red-800 rounded-lg">
+              <p className="text-red-200">{error}</p>
             </div>
           )}
 
@@ -308,11 +331,11 @@ export function StoryboardForm() {
         </form>
 
         {/* Info Box */}
-        <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-          <h3 className="text-sm font-semibold text-blue-900 dark:text-blue-200 mb-2">
+        <div className="mt-6 p-4 bg-blue-900/20 rounded-lg">
+          <h3 className="text-sm font-semibold text-blue-200 mb-2">
             💡 How it works:
           </h3>
-          <ul className="text-sm text-blue-800 dark:text-blue-300 space-y-1 list-disc list-inside">
+          <ul className="text-sm text-blue-300 space-y-1 list-disc list-inside">
             <li>Select a connected repository to auto-fetch its README</li>
             <li>Edit the README if needed before generating</li>
             <li>AI analyzes your README using GPT-4o-mini</li>

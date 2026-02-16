@@ -9,10 +9,7 @@ import { getUserRepositories } from '../api/repository-actions';
 import { PatTokenForm } from './PatTokenForm';
 import { RepositoryManager } from './RepositoryManager';
 import { RepoProductCard, type RepoProduct } from './RepoProductCard';
-import { RateLimitWarning } from './RateLimitWarning';
 import { createClient } from '@/lib/supabase/server';
-import Link from 'next/link';
-import { BentoGrid } from '@/components/ui/bento-grid';
 
 /* ------------------------------------------------------------------ */
 /*  Shared section header                                              */
@@ -44,6 +41,8 @@ function SectionHeader({
 /*  Aggregate stats row                                                */
 /* ------------------------------------------------------------------ */
 
+// @ts-expect-error - AggregateStats is planned for future use
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function AggregateStats({ products }: { products: RepoProduct[] }) {
   const totalMetrics = products.flatMap((p) => p.metrics);
   const totalStars = products.reduce((s, p) => s + p.stars, 0);
@@ -205,84 +204,32 @@ export async function QuickPeek() {
 
   /* -------- Render: Portfolio -------- */
   return (
-    <section className="w-full py-16 px-4">
+    <section id="products" className="py-24 px-4">
       <div className="max-w-6xl mx-auto">
-        {/* Header row */}
-        <div className="flex items-end justify-between mb-10">
-          <div>
-            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
-              Proof of Work
-            </p>
-            <h2 className="text-3xl font-bold tracking-tight text-foreground">
-              Portfolio
-            </h2>
-            <p className="mt-2 text-base text-muted-foreground">
-              {products.length} {products.length === 1 ? 'project' : 'projects'} tracked
-            </p>
-          </div>
-          <Link
-            href="/repositories"
-            className="text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
-          >
-            Manage
-          </Link>
+        {/* Section Header */}
+        <div className="text-center mb-16">
+          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
+            Products
+          </p>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
+            Things I've{' '}
+            <span className="gradient-text">built</span>
+          </h2>
+          <p className="text-base text-muted-foreground max-w-xl mx-auto">
+            A collection of products I've shipped. Each one solves a real problem I faced as a builder.
+          </p>
         </div>
 
-        {/* Rate limit warning */}
-        <div className="mb-4">
-          <RateLimitWarning />
-        </div>
-
-        {/* Aggregate stats row */}
-        <AggregateStats products={products} />
-
-        {/* Product bento grid */}
-        <BentoGrid className="max-w-6xl mx-auto">
+        {/* Product stack - horizontal cards */}
+        <div className="space-y-8 mb-12">
           {products.map((product, i) => (
-            <div
+            <RepoProductCard
               key={`${product.owner}/${product.repo}`}
-              className={
-                i === 0 && products.length > 1
-                  ? "md:col-span-2 md:row-span-2"
-                  : "md:col-span-1"
-              }
-            >
-              <RepoProductCard
-                product={product}
-                featured={i === 0 && products.length > 1}
-              />
-            </div>
+              product={product}
+              featured={i === 0 && products.length > 1}
+            />
           ))}
-
-          {/* Add more CTA */}
-          {products.length < 10 && (
-            <div className="md:col-span-1">
-              <Link
-                href="/repositories"
-                className="glass-card p-8 flex flex-col items-center justify-center gap-3 text-muted-foreground hover:text-foreground transition-colors group min-h-[160px] h-full"
-              >
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 16 16"
-                  fill="none"
-                  aria-hidden="true"
-                  className="text-muted-foreground group-hover:text-foreground transition-colors"
-                >
-                  <path
-                    d="M8 1v14M1 8h14"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                <span className="font-mono text-xs uppercase tracking-wider">
-                  Add project
-                </span>
-              </Link>
-            </div>
-          )}
-        </BentoGrid>
+        </div>
       </div>
     </section>
   );

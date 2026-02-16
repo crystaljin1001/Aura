@@ -1,11 +1,13 @@
 /**
  * RepoProductCard - treats each repository as a "product" in a portfolio.
- * Displays repo metadata, language badge, and impact metrics
- * as prominent hero numbers inside a glassmorphism bento card.
+ * Horizontal layout with interactive demo on left, product details on right.
  */
 
 import type { ImpactMetric } from '@/types';
 import { cn } from '@/utils/cn';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Code2, Eye, Github, Star, GitFork, Users, Sparkles, CheckCircle2 } from 'lucide-react';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -24,6 +26,8 @@ export interface RepoProduct {
   lastUpdated: Date | null;
   demoCoverUrl?: string | null; // Optional demo video thumbnail/cover
   demoVideoUrl?: string | null; // Optional demo video URL
+  websiteUrl?: string | null; // Optional live website URL
+  techStack?: string[]; // Optional array of technologies used
 }
 
 interface RepoProductCardProps {
@@ -36,59 +40,6 @@ interface RepoProductCardProps {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-/** Language dot colors (subset of GitHub's) */
-const langColors: Record<string, string> = {
-  TypeScript: 'bg-blue-400',
-  JavaScript: 'bg-yellow-400',
-  Python: 'bg-emerald-400',
-  Rust: 'bg-orange-400',
-  Go: 'bg-cyan-400',
-  Java: 'bg-red-400',
-  Ruby: 'bg-red-500',
-  'C++': 'bg-pink-400',
-  C: 'bg-violet-400',
-  Swift: 'bg-orange-500',
-  Kotlin: 'bg-purple-400',
-  Shell: 'bg-green-500',
-};
-
-/** Accent color per metric type for the big number */
-const metricColors: Record<string, string> = {
-  issues_resolved: 'text-red-400',
-  performance: 'text-amber-400',
-  users: 'text-blue-400',
-  quality: 'text-emerald-400',
-  features: 'text-cyan-400',
-};
-
-function formatRelativeTime(dateStr: string) {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diffMs = now - then;
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  if (diffDays === 0) return 'today';
-  if (diffDays === 1) return '1d ago';
-  if (diffDays < 30) return `${diffDays}d ago`;
-  if (diffDays < 365) return `${Math.floor(diffDays / 30)}mo ago`;
-  return `${Math.floor(diffDays / 365)}y ago`;
-}
-
-function StarIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-      <path d="M8 .25a.75.75 0 01.673.418l1.882 3.815 4.21.612a.75.75 0 01.416 1.279l-3.046 2.97.719 4.192a.75.75 0 01-1.088.791L8 12.347l-3.766 1.98a.75.75 0 01-1.088-.79l.72-4.194L.818 6.374a.75.75 0 01.416-1.28l4.21-.611L7.327.668A.75.75 0 018 .25z" />
-    </svg>
-  );
-}
-
-function ForkIcon() {
-  return (
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
-      <path d="M5 3.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm0 2.122a2.25 2.25 0 10-1.5 0v.878A2.25 2.25 0 005.75 8.5h1.5v2.128a2.251 2.251 0 101.5 0V8.5h1.5a2.25 2.25 0 002.25-2.25v-.878a2.25 2.25 0 10-1.5 0v.878a.75.75 0 01-.75.75h-4.5A.75.75 0 015 6.25v-.878zm3.75 7.378a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-8.75a.75.75 0 100-1.5.75.75 0 000 1.5z" />
-    </svg>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -98,237 +49,130 @@ export function RepoProductCard({ product, featured = false }: RepoProductCardPr
     owner,
     repo,
     description,
-    language,
     stars,
     forks,
-    pushedAt,
     metrics,
-    demoCoverUrl,
-    demoVideoUrl,
+    websiteUrl,
+    techStack,
   } = product;
 
   const nonZeroMetrics = metrics.filter((m) => m.value > 0);
-  const topMetrics = featured ? nonZeroMetrics.slice(0, 5) : nonZeroMetrics.slice(0, 3);
-  const langDot = language ? (langColors[language] ?? 'bg-muted-foreground') : null;
+  const topHighlights = nonZeroMetrics.slice(0, 3);
 
-  // Use video-first layout if demo cover exists
-  const hasDemo = Boolean(demoCoverUrl);
+  // Calculate total users from metrics
+  const totalUsers = metrics
+    .filter(m => m.type === 'users')
+    .reduce((sum, m) => sum + m.value, 0);
 
-  // Video-first layout
-  if (hasDemo) {
-    return (
-      <div
-        className={cn(
-          'glass-card group relative flex flex-col overflow-hidden',
-          featured ? 'md:col-span-2' : '',
-        )}
-      >
-        {/* ---- Video Cover with Metric Overlays ---- */}
-        <div className="relative aspect-video overflow-hidden bg-muted">
-          <img
-            src={demoCoverUrl!}
-            alt={`${repo} demo`}
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          />
+  // Horizontal layout with interactive demo
+  return (
+    <div
+      className={cn(
+        'glass-card-glow group relative overflow-hidden',
+        featured ? 'md:col-span-2' : '',
+      )}
+    >
+      <div className="grid grid-cols-1 lg:grid-cols-2">
+        {/* Left: Interactive Demo Area */}
+        <div className="relative bg-gradient-to-br from-blue-900/40 via-blue-800/30 to-cyan-900/40 flex items-center justify-center min-h-[300px] lg:min-h-[400px]">
+          <div className="text-center">
+            <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
+              <Code2 className="w-12 h-12 text-white" />
+            </div>
+            <p className="text-base text-muted-foreground">Interactive Demo</p>
+          </div>
+        </div>
 
-          {/* Metric overlays as badges */}
-          {topMetrics.length > 0 && (
-            <div className="absolute bottom-3 left-3 right-3 flex items-center gap-2 flex-wrap">
-              {topMetrics.slice(0, 3).map((m) => (
-                <div
-                  key={m.id}
-                  className="px-3 py-1.5 rounded-full bg-background/80 backdrop-blur-sm border border-border flex items-center gap-2"
-                >
-                  <span
-                    className={cn(
-                      'font-mono font-bold text-sm',
-                      metricColors[m.type] ?? 'text-foreground',
-                    )}
-                  >
-                    {m.value.toLocaleString()}
-                  </span>
-                  <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                    {m.title.replace(/^(Critical )?/, '')}
-                  </span>
+        {/* Right: Product Details */}
+        <div className="p-8 lg:p-10 bg-background/95">
+          {/* Top badges */}
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
+            {featured && (
+              <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 px-3 py-1">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Featured
+              </Badge>
+            )}
+            <div className="flex items-center gap-1 text-sm">
+              <Star className="w-4 h-4 text-amber-400" />
+              <span className="text-foreground font-medium">{stars}</span>
+            </div>
+            <div className="flex items-center gap-1 text-sm">
+              <GitFork className="w-4 h-4 text-blue-400" />
+              <span className="text-foreground font-medium">{forks}</span>
+            </div>
+            {totalUsers > 0 && (
+              <div className="flex items-center gap-1 text-sm">
+                <Users className="w-4 h-4 text-emerald-400" />
+                <span className="text-foreground font-medium">{totalUsers > 1000 ? `${(totalUsers / 1000).toFixed(1)}k` : totalUsers}</span>
+              </div>
+            )}
+          </div>
+
+          {/* Product Title */}
+          <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+            {repo}
+          </h3>
+
+          {/* Tagline */}
+          <p className="text-base text-muted-foreground mb-4">
+            {description || 'Portfolio platform for builders'}
+          </p>
+
+          {/* Extended Description */}
+          <p className="text-muted-foreground leading-relaxed mb-6">
+            Turn your GitHub repositories into a high-signal portfolio. Each project becomes a product card with real impact metrics.
+          </p>
+
+          {/* Highlights */}
+          {topHighlights.length > 0 && (
+            <div className="space-y-3 mb-8">
+              {topHighlights.map((highlight) => (
+                <div key={highlight.id} className="flex items-start gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                  <span className="text-muted-foreground">{highlight.title}</span>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Play button overlay if video URL exists */}
-          {demoVideoUrl && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="w-16 h-16 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-foreground ml-1">
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              </div>
+          {/* Tech Stack */}
+          {techStack && techStack.length > 0 && (
+            <div className="flex flex-wrap gap-2 mb-8">
+              {techStack.map((tech) => (
+                <Badge key={tech} variant="secondary" className="px-3 py-1 text-xs bg-secondary/50">
+                  {tech}
+                </Badge>
+              ))}
             </div>
           )}
-        </div>
 
-        {/* ---- Content below video ---- */}
-        <div className={cn('p-6', featured && 'p-8')}>
-          {/* Header: repo name + pushed-at */}
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div className="min-w-0 flex-1">
+          {/* Action Buttons */}
+          <div className="flex gap-3">
+            {websiteUrl && (
+              <Button size="lg" className="bg-foreground text-background hover:bg-foreground/90">
+                <Eye className="w-4 h-4 mr-2" />
+                Live Demo
+              </Button>
+            )}
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-border hover:bg-glass-hover"
+              asChild
+            >
               <a
                 href={`https://github.com/${owner}/${repo}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className={cn(
-                  'block font-semibold text-foreground hover:text-accent transition-colors truncate',
-                  featured ? 'text-xl' : 'text-base',
-                )}
               >
-                {repo}
+                <Github className="w-4 h-4 mr-2" />
+                View Code
               </a>
-              <span className="text-xs text-muted-foreground font-mono">{owner}</span>
-            </div>
-            {pushedAt && (
-              <span className="shrink-0 text-xs text-muted-foreground font-mono">
-                {formatRelativeTime(pushedAt)}
-              </span>
-            )}
-          </div>
-
-          {/* Description */}
-          {description && (
-            <p className="text-sm text-muted-foreground leading-relaxed mb-4 line-clamp-2">
-              {description}
-            </p>
-          )}
-
-          {/* Footer: language + stars/forks */}
-          <div className="flex items-center justify-between pt-4 border-t border-border">
-            <div className="flex items-center gap-3">
-              {language && langDot && (
-                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <span className={cn('inline-block h-2 w-2 rounded-full', langDot)} />
-                  {language}
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <StarIcon />
-                <span className="font-mono">{stars.toLocaleString()}</span>
-              </span>
-              <span className="flex items-center gap-1">
-                <ForkIcon />
-                <span className="font-mono">{forks.toLocaleString()}</span>
-              </span>
-            </div>
+            </Button>
           </div>
         </div>
-
-        {/* Hover accent line */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-accent/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </div>
-    );
-  }
-
-  // Metric-first layout (fallback when no demo video)
-  return (
-    <div
-      className={cn(
-        'glass-card group relative flex flex-col overflow-hidden',
-        featured ? 'md:col-span-2 p-8' : 'p-6',
-      )}
-    >
-      {/* ---- Header: repo name + pushed-at ---- */}
-      <div className="flex items-start justify-between gap-4 mb-4">
-        <div className="min-w-0 flex-1">
-          <a
-            href={`https://github.com/${owner}/${repo}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              'block font-semibold text-foreground hover:text-accent transition-colors truncate',
-              featured ? 'text-xl' : 'text-base',
-            )}
-          >
-            {repo}
-          </a>
-          <span className="text-xs text-muted-foreground font-mono">{owner}</span>
-        </div>
-        {pushedAt && (
-          <span className="shrink-0 text-xs text-muted-foreground font-mono">
-            {formatRelativeTime(pushedAt)}
-          </span>
-        )}
-      </div>
-
-      {/* ---- Description ---- */}
-      {description && (
-        <p className={cn(
-          'text-sm text-muted-foreground leading-relaxed mb-5 line-clamp-2',
-          featured && 'line-clamp-3',
-        )}>
-          {description}
-        </p>
-      )}
-
-      {/* ---- Impact metrics grid (hero numbers) ---- */}
-      {topMetrics.length > 0 && (
-        <div className={cn(
-          'grid gap-4 mb-6',
-          featured
-            ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
-            : 'grid-cols-2 sm:grid-cols-3',
-        )}>
-          {topMetrics.map((m) => (
-            <div key={m.id} className="flex flex-col">
-              <span
-                className={cn(
-                  'font-mono font-bold tracking-tight leading-none',
-                  featured ? 'text-4xl' : 'text-3xl',
-                  metricColors[m.type] ?? 'text-foreground',
-                )}
-              >
-                {m.value.toLocaleString()}
-              </span>
-              <span className="mt-1.5 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
-                {m.title.replace(/^(Critical )?/, '')}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* No metrics yet state */}
-      {topMetrics.length === 0 && (
-        <div className="flex-1 flex items-center justify-center py-6">
-          <span className="text-xs text-muted-foreground">
-            Impact data processing...
-          </span>
-        </div>
-      )}
-
-      {/* ---- Footer: language + stars/forks ---- */}
-      <div className="mt-auto flex items-center justify-between pt-4 border-t border-border">
-        <div className="flex items-center gap-3">
-          {language && langDot && (
-            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span className={cn('inline-block h-2 w-2 rounded-full', langDot)} />
-              {language}
-            </span>
-          )}
-        </div>
-        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <StarIcon />
-            <span className="font-mono">{stars.toLocaleString()}</span>
-          </span>
-          <span className="flex items-center gap-1">
-            <ForkIcon />
-            <span className="font-mono">{forks.toLocaleString()}</span>
-          </span>
-        </div>
-      </div>
-
-      {/* Hover accent line */}
-      <div className="absolute bottom-0 left-0 right-0 h-px bg-accent/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
     </div>
   );
 }

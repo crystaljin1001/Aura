@@ -44,7 +44,8 @@ async function getAuthenticatedUser() {
  */
 export async function generateScript(
   projectName: string,
-  readmeContent: string
+  readmeContent: string,
+  repositoryUrl?: string
 ): Promise<ApiResponse<NarrativeScript>> {
   try {
     // Validate input
@@ -98,6 +99,7 @@ export async function generateScript(
       project_name: validated.projectName,
       readme_content: validated.readmeContent,
       generated_script: parsedScript,
+      repository_url: repositoryUrl || null,
     });
 
     if (dbError) {
