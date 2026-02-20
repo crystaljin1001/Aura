@@ -147,10 +147,12 @@ function isCacheValid(expiresAt: string): boolean {
  * Fetches impact data for specified repositories
  * Uses 24-hour cache to minimize GitHub API calls
  * @param repos - Array of repository identifiers
+ * @param forceRefresh - If true, bypasses cache and fetches fresh data
  * @returns ApiResponse with impact data
  */
 export async function getImpactData(
-  repos: RepoIdentifier[]
+  repos: RepoIdentifier[],
+  forceRefresh = false
 ): Promise<ApiResponse<RepositoryImpactData[]>> {
   try {
     // Validate input
@@ -166,7 +168,7 @@ export async function getImpactData(
     for (const repo of validated) {
       const repoFullName = `${repo.owner}/${repo.repo}`;
 
-      // Check cache first
+      // Check cache first (unless force refresh)
       const { data: cached } = await supabase
         .from('impact_cache')
         .select('*')
@@ -174,7 +176,7 @@ export async function getImpactData(
         .eq('repo_full_name', repoFullName)
         .single();
 
-      if (cached && isCacheValid(cached.expires_at)) {
+      if (!forceRefresh && cached && isCacheValid(cached.expires_at)) {
         // Use cached data
         results.push({
           repoFullName,
@@ -191,8 +193,32 @@ export async function getImpactData(
         fetchPullRequests(repo.owner, repo.repo, token),
       ]);
 
+      // Fetch README length
+      let readmeLength: number | undefined;
+      try {
+        const readmeResponse = await fetch(
+          `https://api.github.com/repos/${repo.owner}/${repo.repo}/readme`,
+          {
+            headers: {
+              Authorization: `token ${token}`,
+              Accept: 'application/vnd.github.v3.raw',
+            },
+          }
+        );
+        if (readmeResponse.ok) {
+          const readmeContent = await readmeResponse.text();
+          readmeLength = readmeContent.length;
+        }
+      } catch {
+        // README not found or fetch failed - that's okay
+      }
+
       // Sanitize data
-      const sanitizedRepo = sanitizeRepoData(repoData as unknown as Record<string, unknown>);
+      const repoDataWithReadme = {
+        ...(repoData as Record<string, unknown>),
+        readmeLength,
+      };
+      const sanitizedRepo = sanitizeRepoData(repoDataWithReadme);
 
       // Calculate impacts
       const impacts = calculateImpacts(

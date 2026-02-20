@@ -2,7 +2,10 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import type { ImpactMetric } from '@/types'
 import type { Project, ProjectStatus } from './types'
+import type { TechnicalJourney, TechDecision } from '@/features/portfolio/types'
+import { calculateCompleteness, getCompletenessStats } from '@/features/portfolio/utils/completeness-checker'
 
 export async function getUserProjectsWithStatus(): Promise<Project[]> {
   const supabase = await createClient()
@@ -51,10 +54,18 @@ export async function getUserProjectsWithStatus(): Promise<Project[]> {
     .eq('user_id', user.id)
 
   // Fetch impact metrics from cache
-  const repoUrls = repos.map(r => r.full_name)
+  const repoUrls = repos.map(r => `${r.repo_owner}/${r.repo_name}`)
   const { data: impactCache } = await supabase
     .from('impact_cache')
     .select('*')
+    .eq('user_id', user.id)
+    .in('repo_full_name', repoUrls)
+
+  // Fetch technical journeys
+  const { data: journeys } = await supabase
+    .from('project_technical_journey')
+    .select('*')
+    .eq('user_id', user.id)
     .in('repository_url', repoUrls)
 
   // Combine data and determine status
@@ -66,7 +77,13 @@ export async function getUserProjectsWithStatus(): Promise<Project[]> {
 
     const video = videos?.find(v => v.repository_url === repoUrl)
     const domain = domains?.find(d => d.repository_url === repoUrl)
-    const impact = impactCache?.find(c => c.repository_url === repoUrl)
+    const impact = impactCache?.find(c => c.repo_full_name === repoUrl)
+
+    // Parse repo data from JSONB
+    const repoData = impact?.repo_data as Record<string, unknown> | undefined
+    const description = repoData?.description as string | undefined
+    const language = repoData?.language as string | undefined
+    const readmeLength = repoData?.readmeLength as number | undefined
 
     let status: ProjectStatus = 'new'
     if (hasDomain) {
@@ -79,33 +96,65 @@ export async function getUserProjectsWithStatus(): Promise<Project[]> {
 
     // Parse impact metrics
     let impactMetrics
-    if (impact?.metrics) {
-      const metrics = Array.isArray(impact.metrics) ? impact.metrics : []
+    if (impact?.impact_metrics) {
+      const metrics: ImpactMetric[] = Array.isArray(impact.impact_metrics) ? impact.impact_metrics : []
       impactMetrics = {
-        criticalIssuesResolved: metrics.find((m: any) => m.type === 'issues_resolved')?.value || 0,
-        performanceOptimizations: metrics.find((m: any) => m.type === 'performance')?.value || 0,
-        userAdoption: metrics.find((m: any) => m.type === 'users')?.value || 0,
-        codeQualityImprovements: metrics.find((m: any) => m.type === 'quality')?.value || 0,
-        featuresDelivered: metrics.find((m: any) => m.type === 'features')?.value || 0
+        criticalIssuesResolved: metrics.find((m) => m.type === 'issues_resolved')?.value || 0,
+        performanceOptimizations: metrics.find((m) => m.type === 'performance')?.value || 0,
+        userAdoption: metrics.find((m) => m.type === 'users')?.value || 0,
+        codeQualityImprovements: metrics.find((m) => m.type === 'quality')?.value || 0,
+        featuresDelivered: metrics.find((m) => m.type === 'features')?.value || 0
       }
     }
+
+    // Build technical journey if exists
+    const journeyData = journeys?.find(j => j.repository_url === repoUrl)
+    let technicalJourney: TechnicalJourney | null = null
+    if (journeyData) {
+      technicalJourney = {
+        problemStatement: journeyData.problem_statement,
+        technicalApproach: journeyData.technical_approach,
+        keyChallenges: journeyData.key_challenges,
+        outcome: journeyData.outcome,
+        learnings: journeyData.learnings || [],
+        techDecisions: (journeyData.tech_decisions as TechDecision[]) || [],
+      }
+    }
+
+    // Calculate completeness
+    const completeness = calculateCompleteness({
+      description,
+      language,
+      hasReadme: !!readmeLength,
+      readmeLength,
+      hasTypeScript: language === 'TypeScript',
+      hasTests: false, // TODO: Fetch from GitHub API
+      hasEnvExample: false, // TODO: Fetch from GitHub API
+      hasLicense: false, // TODO: Fetch from GitHub API
+      hasGitignore: true, // Assume true for now
+      websiteUrl: domain?.domain,
+      technicalJourney,
+    })
+
+    const completenessStats = getCompletenessStats(completeness)
 
     return {
       id: repo.id,
       name: repo.repo_name,
       repository: repoUrl,
-      description: null, // Not stored in user_repositories table
+      description: undefined, // Not stored in user_repositories table
       status,
       hasScript,
       hasVideo,
       hasDomain,
       stars: 0, // Will be fetched from impact cache
       forks: 0, // Will be fetched from impact cache
-      language: null, // Will be fetched from impact cache
+      language: undefined, // Will be fetched from impact cache
       videoUrl: video?.video_url,
       videoThumbnail: video?.thumbnail_url,
       domainUrl: domain?.domain,
       impactMetrics,
+      completeness: completenessStats,
       createdAt: repo.added_at,
       updatedAt: repo.added_at
     }

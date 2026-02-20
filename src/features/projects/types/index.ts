@@ -22,6 +22,12 @@ export interface Project {
     codeQualityImprovements: number
     featuresDelivered: number
   }
+  completeness?: {
+    completed: number
+    total: number
+    percentage: number
+    category: 'getting-started' | 'in-progress' | 'complete'
+  }
   createdAt?: string
   updatedAt?: string
 }

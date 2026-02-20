@@ -1,4 +1,7 @@
 import { RepositoryManager } from '@/features/impact-engine/components/RepositoryManager';
+import { PatTokenForm } from '@/features/impact-engine/components/PatTokenForm';
+import { RepositoryDiagnostic } from '@/features/impact-engine/components/RepositoryDiagnostic';
+import { RefreshImpactButton } from '@/features/impact-engine/components/RefreshImpactButton';
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
@@ -57,14 +60,34 @@ export default async function RepositoriesPage() {
       <section className="py-16 px-4">
         <div className="max-w-5xl mx-auto">
           <div className="mb-10">
-            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
-              Settings
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
+                  Settings
+                </p>
+                <h1 className="text-3xl font-bold tracking-tight text-foreground">
+                  Repositories
+                </h1>
+              </div>
+              <RefreshImpactButton />
+            </div>
+            <p className="text-sm text-muted-foreground mt-3">
+              Refresh impact data to update README lengths and repository metrics
             </p>
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">
-              Repositories
-            </h1>
           </div>
+
+          {/* GitHub Token Form */}
+          <div className="mb-12">
+            <PatTokenForm />
+          </div>
+
+          {/* Repository List */}
           <RepositoryManager />
+
+          {/* Diagnostic Tool */}
+          <div className="mt-12">
+            <RepositoryDiagnostic />
+          </div>
         </div>
       </section>
     </div>

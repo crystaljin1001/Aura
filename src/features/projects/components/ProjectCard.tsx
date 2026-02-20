@@ -17,6 +17,7 @@ import type { Project } from '../types'
 import { ScriptEditorModal } from './ScriptEditorModal'
 import { VideoUploadModal } from './VideoUploadModal'
 import { ViewScriptModal } from './ViewScriptModal'
+import { CompletnessBadge } from '@/features/portfolio/components/CompletnessBadge'
 
 interface ProjectCardProps {
   project: Project
@@ -55,6 +56,19 @@ export function ProjectCard({ project }: ProjectCardProps) {
               )}
             </div>
           </div>
+
+          {/* Completeness Badge */}
+          {project.completeness && (
+            <div className="flex items-center">
+              <CompletnessBadge
+                completed={project.completeness.completed}
+                total={project.completeness.total}
+                percentage={project.completeness.percentage}
+                category={project.completeness.category}
+                variant="compact"
+              />
+            </div>
+          )}
 
           {/* GitHub Stats */}
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
@@ -147,6 +161,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
               )}
               <DropdownMenuItem onClick={handleViewOnGitHub}>
                 🔗 View on GitHub
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <a href={`/portfolio/${project.repository.replace('/', '-')}`}>
+                  👁️ View Case Study
+                </a>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
