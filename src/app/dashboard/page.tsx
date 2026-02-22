@@ -8,6 +8,7 @@ import { AddProjectCard } from '@/features/projects/components/AddProjectCard'
 import { RefreshImpactButton } from '@/features/impact-engine/components/RefreshImpactButton'
 import { TechnicalJourneyModalWrapper } from '@/features/portfolio/components/TechnicalJourneyModalWrapper'
 import { NextStepsGuidance } from '@/features/projects/components/NextStepsGuidance'
+import { SharePortfolioCard } from '@/features/portfolio/components/SharePortfolioCard'
 import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
@@ -84,6 +85,9 @@ export default async function DashboardPage() {
             <RefreshImpactButton />
           </div>
         </div>
+
+        {/* Share Portfolio */}
+        {projects.length > 0 && <SharePortfolioCard userEmail={user.email || ''} />}
 
         {/* Next Steps Guidance */}
         <NextStepsGuidance projects={projects} />

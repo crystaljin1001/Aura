@@ -28,11 +28,15 @@ export default function AuthPage() {
 
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: `${window.location.origin}/auth/callback`,
+            // Skip email confirmation in development
+            data: {
+              email_confirm: true,
+            },
           },
         });
 
@@ -40,8 +44,13 @@ export default function AuthPage() {
 
         setMessage({
           type: 'success',
-          text: 'Account created! Please check your email to confirm.',
+          text: 'Account created! Redirecting to onboarding...',
         });
+
+        // Auto sign in and redirect after short delay
+        setTimeout(() => {
+          router.push('/onboarding');
+        }, 1000);
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email,
@@ -55,8 +64,20 @@ export default function AuthPage() {
           text: 'Signed in successfully! Redirecting...',
         });
 
-        // Redirect to home page
-        setTimeout(() => router.push('/'), 1000);
+        // Check if user has completed onboarding
+        const { data: profile } = await supabase
+          .from('user_profiles')
+          .select('onboarding_completed')
+          .single();
+
+        // Redirect to onboarding if not completed, otherwise to dashboard
+        setTimeout(() => {
+          if (!profile || !profile.onboarding_completed) {
+            router.push('/onboarding');
+          } else {
+            router.push('/dashboard');
+          }
+        }, 1000);
       }
     } catch (error) {
       setMessage({

@@ -110,6 +110,7 @@ export interface SanitizedRepository {
   createdAt: string;
   updatedAt: string;
   pushedAt: string;
+  readmeLength?: number;
 }
 
 export function sanitizeRepoData(repo: Record<string, unknown>): SanitizedRepository {
@@ -125,6 +126,7 @@ export function sanitizeRepoData(repo: Record<string, unknown>): SanitizedReposi
     createdAt: String(repo.created_at || ''),
     updatedAt: String(repo.updated_at || ''),
     pushedAt: String(repo.pushed_at || ''),
+    readmeLength: repo.readmeLength ? Number(repo.readmeLength) : undefined,
   };
 }
 

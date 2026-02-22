@@ -8,6 +8,7 @@ import { cn } from '@/utils/cn';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Code2, Eye, Github, Star, GitFork, Users, Sparkles, CheckCircle2 } from 'lucide-react';
+import { decodeHtmlEntities } from '@/lib/utils/html';
 
 /* ------------------------------------------------------------------ */
 /*  Types                                                              */
@@ -52,7 +53,6 @@ export function RepoProductCard({ product, featured = false }: RepoProductCardPr
     stars,
     forks,
     metrics,
-    websiteUrl,
     techStack,
   } = product;
 
@@ -114,15 +114,12 @@ export function RepoProductCard({ product, featured = false }: RepoProductCardPr
             {repo}
           </h3>
 
-          {/* Tagline */}
-          <p className="text-base text-muted-foreground mb-4">
-            {description || 'Portfolio platform for builders'}
-          </p>
-
-          {/* Extended Description */}
-          <p className="text-muted-foreground leading-relaxed mb-6">
-            Turn your GitHub repositories into a high-signal portfolio. Each project becomes a product card with real impact metrics.
-          </p>
+          {/* Description */}
+          {description && (
+            <p className="text-muted-foreground leading-relaxed mb-6">
+              {decodeHtmlEntities(description)}
+            </p>
+          )}
 
           {/* Highlights */}
           {topHighlights.length > 0 && (
@@ -149,12 +146,16 @@ export function RepoProductCard({ product, featured = false }: RepoProductCardPr
 
           {/* Action Buttons */}
           <div className="flex gap-3">
-            {websiteUrl && (
-              <Button size="lg" className="bg-foreground text-background hover:bg-foreground/90">
+            <Button
+              size="lg"
+              className="bg-foreground text-background hover:bg-foreground/90"
+              asChild
+            >
+              <a href={`/portfolio/${owner}-${repo}`}>
                 <Eye className="w-4 h-4 mr-2" />
-                Live Demo
-              </Button>
-            )}
+                View Full Case Study
+              </a>
+            </Button>
             <Button
               size="lg"
               variant="outline"

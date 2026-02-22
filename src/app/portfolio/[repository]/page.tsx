@@ -15,6 +15,7 @@ import { createClient } from '@/lib/supabase/server'
 import type { PageProps } from '@/types'
 import { getCaseStudyData, generateContextBlock, generateArchitectureDiagram } from '@/features/portfolio/api/actions'
 import { decryptToken } from '@/lib/encryption/crypto'
+import { Header } from '@/components/layout/Header'
 import { HeroSection } from '@/features/portfolio/components/HeroSection'
 import { ContextBlockSection } from '@/features/portfolio/components/ContextBlockSection'
 import { ArchitectureDiagramSection } from '@/features/portfolio/components/ArchitectureDiagramSection'
@@ -166,9 +167,11 @@ export default async function CaseStudyPage({ params }: PageProps) {
   const nonZeroMetrics = project.metrics.filter((m) => m.value > 0)
 
   return (
-    <main className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <HeroSection project={project} />
+    <>
+      <Header showBackButton backHref="/dashboard" backLabel="Back to Dashboard" />
+      <main className="min-h-screen bg-background">
+        {/* Hero Section */}
+        <HeroSection project={project} />
 
       {/* CTA: Write Technical Journey (if doesn't exist) */}
       {!project.technicalJourney && (
@@ -355,5 +358,6 @@ export default async function CaseStudyPage({ params }: PageProps) {
         </div>
       </section>
     </main>
+    </>
   )
 }

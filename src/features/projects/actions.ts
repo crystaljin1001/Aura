@@ -303,6 +303,70 @@ export async function saveProjectVideo(repositoryUrl: string, videoUrl: string, 
   revalidatePath('/dashboard')
 }
 
+/**
+ * Upload project video file to Supabase Storage
+ */
+export async function uploadProjectVideo(
+  formData: FormData,
+  onProgress?: (progress: number) => void
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  const videoFile = formData.get('video') as File
+  const repositoryUrl = formData.get('repository') as string
+
+  if (!videoFile || !repositoryUrl) {
+    throw new Error('Missing video file or repository URL')
+  }
+
+  // Validate file size (50MB max for Supabase free tier)
+  const maxSize = 50 * 1024 * 1024
+  if (videoFile.size > maxSize) {
+    throw new Error('Video file must be less than 50MB')
+  }
+
+  // Generate unique filename
+  const fileExt = videoFile.name.split('.').pop()
+  const fileName = `${user.id}/${repositoryUrl.replace('/', '-')}-${Date.now()}.${fileExt}`
+
+  try {
+    // Upload to Supabase Storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('project-videos')
+      .upload(fileName, videoFile, {
+        cacheControl: '3600',
+        upsert: false
+      })
+
+    if (uploadError) {
+      console.error('Upload error:', uploadError)
+      throw new Error(`Failed to upload video: ${uploadError.message}`)
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('project-videos')
+      .getPublicUrl(fileName)
+
+    // Save video URL to database
+    await saveProjectVideo(repositoryUrl, publicUrl)
+
+    onProgress?.(100)
+
+    revalidatePath('/dashboard')
+
+    return { success: true, url: publicUrl }
+  } catch (error) {
+    console.error('Error uploading video:', error)
+    throw error
+  }
+}
+
 export async function getProjectScript(repositoryUrl: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

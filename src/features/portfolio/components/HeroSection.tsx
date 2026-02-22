@@ -9,6 +9,7 @@ import { Star, GitFork, Eye, Github, ExternalLink } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { decodeHtmlEntities } from '@/lib/utils/html'
+import { getVideoType, getEmbeddableVideoUrl } from '@/lib/utils/video'
 import type { CaseStudyProject } from '../types'
 
 interface HeroSectionProps {
@@ -41,13 +42,36 @@ export function HeroSection({ project }: HeroSectionProps) {
           <div className="order-2 lg:order-1">
             <div className="relative aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-blue-900/40 via-blue-800/30 to-cyan-900/40 border border-border shadow-2xl">
               {videoUrl ? (
-                <iframe
-                  src={videoUrl}
-                  className="absolute inset-0 w-full h-full"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                  allowFullScreen
-                  title={`${repo} demo video`}
-                />
+                (() => {
+                  const videoType = getVideoType(videoUrl)
+                  const embedUrl = getEmbeddableVideoUrl(videoUrl)
+
+                  if (videoType === 'direct') {
+                    // Direct video file (MP4, WebM, etc.)
+                    return (
+                      <video
+                        src={embedUrl}
+                        className="absolute inset-0 w-full h-full"
+                        controls
+                        preload="metadata"
+                      >
+                        <track kind="captions" />
+                        Your browser does not support the video tag.
+                      </video>
+                    )
+                  } else {
+                    // YouTube, Vimeo, Tella, Arcade, etc. (iframe embed)
+                    return (
+                      <iframe
+                        src={embedUrl}
+                        className="absolute inset-0 w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                        title={`${repo} demo video`}
+                      />
+                    )
+                  }
+                })()
               ) : videoThumbnail ? (
                 <div className="absolute inset-0">
                   <Image

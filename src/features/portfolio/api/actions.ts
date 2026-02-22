@@ -482,3 +482,130 @@ export async function getCaseStudyData(
     }
   }
 }
+
+/**
+ * Get all projects for a user's public portfolio
+ */
+export async function getUserProjects(userId: string): Promise<ApiResponse<CaseStudyProject[]>> {
+  try {
+    const supabase = await createClient()
+
+    // Fetch user's repositories
+    const { data: repos, error: reposError } = await supabase
+      .from('user_repositories')
+      .select('*')
+      .eq('user_id', userId)
+      .order('added_at', { ascending: false })
+
+    if (reposError) {
+      throw reposError
+    }
+
+    if (!repos || repos.length === 0) {
+      return { success: true, data: [] }
+    }
+
+    const repoUrls = repos.map(r => `${r.repo_owner}/${r.repo_name}`)
+
+    // Fetch all data in parallel
+    const [impactData, videosData, domainsData, journeysData] = await Promise.all([
+      supabase
+        .from('impact_cache')
+        .select('*')
+        .eq('user_id', userId)
+        .in('repo_full_name', repoUrls),
+      supabase
+        .from('project_videos')
+        .select('*')
+        .eq('user_id', userId),
+      supabase
+        .from('project_domains')
+        .select('*')
+        .eq('user_id', userId),
+      supabase
+        .from('project_technical_journey')
+        .select('*')
+        .eq('user_id', userId),
+    ])
+
+    // Map repositories to CaseStudyProject format
+    const projects: CaseStudyProject[] = repos.map(repo => {
+      const repositoryUrl = `${repo.repo_owner}/${repo.repo_name}`
+      const impact = impactData.data?.find(i => i.repo_full_name === repositoryUrl)
+      const video = videosData.data?.find(v => v.repository_url === repositoryUrl)
+      const domain = domainsData.data?.find(d => d.repository_url === repositoryUrl)
+      const journey = journeysData.data?.find(j => j.repository_url === repositoryUrl)
+
+      // Parse repo data
+      const repoData = impact?.repo_data as Record<string, unknown> | undefined
+      const description = repoData?.description as string | undefined
+      const language = repoData?.language as string | undefined
+      const stars = (repoData?.stargazersCount || repoData?.stargazers_count || 0) as number
+      const forks = (repoData?.forksCount || repoData?.forks_count || 0) as number
+
+      // Parse impact metrics
+      const metrics = impact?.impact_metrics ? (Array.isArray(impact.impact_metrics) ? impact.impact_metrics : []) : []
+      const impactMetrics = metrics.filter((m: any) => m.value > 0)
+
+      // Calculate health score and completeness
+      const healthScore = calculateHealthScore({
+        hasReadme: !!repoData?.readmeLength,
+        hasTests: false,
+        hasCI: false,
+        hasDocumentation: !!description,
+        hasLicense: false,
+        lastCommitDays: 0,
+        openIssuesCount: 0,
+        hasActiveContributors: true,
+      })
+
+      const completeness = calculateCompleteness({
+        description,
+        language,
+        hasReadme: !!repoData?.readmeLength,
+        hasTypeScript: language === 'TypeScript',
+        hasTests: false,
+        hasEnvExample: false,
+        hasLicense: false,
+        hasGitignore: true,
+        websiteUrl: domain?.domain,
+        technicalJourney: journey ? {
+          problemStatement: journey.problem_statement,
+          technicalApproach: journey.technical_approach,
+          keyChallenges: journey.key_challenges,
+          outcome: journey.outcome,
+        } : null,
+      })
+
+      return {
+        repositoryUrl,
+        repo: repo.repo_name,
+        owner: repo.repo_owner,
+        description,
+        language,
+        stars,
+        forks,
+        videoUrl: video?.video_url,
+        videoThumbnail: video?.thumbnail_url,
+        websiteUrl: domain?.domain,
+        metrics: impactMetrics,
+        healthScore,
+        completeness,
+        contextBlock: null,
+        architectureDiagram: null,
+        technicalJourney: null,
+        techStack: [],
+        impactDataCached: !!impact,
+      }
+    })
+
+    return { success: true, data: projects }
+  } catch (error) {
+    console.error('Error fetching user projects:', error)
+    return {
+      success: false,
+      error: 'Failed to fetch projects',
+      data: [],
+    }
+  }
+}
