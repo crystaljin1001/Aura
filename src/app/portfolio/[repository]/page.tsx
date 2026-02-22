@@ -25,6 +25,8 @@ import { TechnicalDecisionsSection } from '@/features/portfolio/components/Techn
 import { ProfessionalProjectAssessment } from '@/features/portfolio/components/ProfessionalProjectAssessment'
 import { CritiqueButton } from '@/features/portfolio/components/CritiqueButton'
 import { PulseMetricsCard } from '@/features/pulse-engine/components/PulseMetricsCard'
+import { LogicMapContainer } from '@/features/portfolio/components/LogicMapContainer'
+import { LogicMapJsonLd } from '@/features/portfolio/components/LogicMapJsonLd'
 
 export default async function CaseStudyPage({ params }: PageProps) {
   // Get authenticated user
@@ -328,6 +330,12 @@ export default async function CaseStudyPage({ params }: PageProps) {
           projectName={project.repo}
         />
       )}
+
+      {/* Logic Map - Technical Decisions & Pivot Points */}
+      <LogicMapContainer repositoryUrl={repositoryUrl} />
+
+      {/* JSON-LD for AI Agent Discovery */}
+      <LogicMapJsonLd repositoryUrl={repositoryUrl} projectName={project.repo} />
 
       {/* CTA Section */}
       <section className="max-w-7xl mx-auto px-6 py-16">
