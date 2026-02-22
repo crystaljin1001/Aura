@@ -24,6 +24,7 @@ import { TechnicalJourneySectionWithEdit } from '@/features/portfolio/components
 import { TechnicalDecisionsSection } from '@/features/portfolio/components/TechnicalDecisionsSection'
 import { ProfessionalProjectAssessment } from '@/features/portfolio/components/ProfessionalProjectAssessment'
 import { CritiqueButton } from '@/features/portfolio/components/CritiqueButton'
+import { PulseMetricsCard } from '@/features/pulse-engine/components/PulseMetricsCard'
 
 export default async function CaseStudyPage({ params }: PageProps) {
   // Get authenticated user
@@ -311,6 +312,14 @@ export default async function CaseStudyPage({ params }: PageProps) {
           </div>
         </section>
       )}
+
+      {/* Pulse Engine - Velocity & Uptime */}
+      <section className="max-w-5xl mx-auto px-6 py-16">
+        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-12 text-center">
+          Development Pulse
+        </h2>
+        <PulseMetricsCard repositoryUrl={repositoryUrl} />
+      </section>
 
       {/* Architecture Diagram (if available) */}
       {architectureDiagram && (
