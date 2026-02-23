@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ExternalLink, Copy, Check } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -15,14 +15,15 @@ interface SharePortfolioCardProps {
 
 export function SharePortfolioCard({ userEmail }: SharePortfolioCardProps) {
   const [copied, setCopied] = useState(false)
+  const [portfolioUrl, setPortfolioUrl] = useState('')
 
   // Extract username from email (before @)
   const username = userEmail.split('@')[0]
 
-  // Build portfolio URL (use window.location.origin for dynamic domain)
-  const portfolioUrl = typeof window !== 'undefined'
-    ? `${window.location.origin}/u/${username}`
-    : `/u/${username}`
+  // Build portfolio URL on client only to avoid hydration mismatch
+  useEffect(() => {
+    setPortfolioUrl(`${window.location.origin}/u/${username}`)
+  }, [username])
 
   const handleCopy = async () => {
     try {
@@ -51,7 +52,7 @@ export function SharePortfolioCard({ userEmail }: SharePortfolioCardProps) {
           {/* Portfolio URL Display */}
           <div className="flex items-center gap-2 px-4 py-2 bg-background/50 rounded-lg border border-border">
             <code className="text-sm text-foreground">
-              {portfolioUrl}
+              {portfolioUrl || 'Loading...'}
             </code>
           </div>
 

@@ -34,12 +34,14 @@ export async function getUserProjectsWithStatus(): Promise<Project[]> {
   // Fetch scripts
   const { data: scripts, error: scriptsError } = await supabase
     .from('narrative_scripts')
-    .select('project_name, repository_url')
+    .select('project_name, repository_url, script_type')
     .eq('user_id', user.id)
 
   if (scriptsError) {
     console.error('Error fetching scripts:', scriptsError)
   }
+
+  console.log('[getUserProjectsWithStatus] Fetched scripts:', scripts)
 
   // Fetch videos
   const { data: videos } = await supabase
@@ -74,6 +76,11 @@ export async function getUserProjectsWithStatus(): Promise<Project[]> {
     const hasScript = scripts?.some(s => s.repository_url === repoUrl) || false
     const hasVideo = videos?.some(v => v.repository_url === repoUrl) || false
     const hasDomain = domains?.some(d => d.repository_url === repoUrl && d.is_active) || false
+
+    console.log(`[getUserProjectsWithStatus] ${repoUrl}:`, {
+      hasScript,
+      matchingScripts: scripts?.filter(s => s.repository_url === repoUrl),
+    })
 
     const video = videos?.find(v => v.repository_url === repoUrl)
     const domain = domains?.find(d => d.repository_url === repoUrl)
@@ -367,7 +374,7 @@ export async function uploadProjectVideo(
   }
 }
 
-export async function getProjectScript(repositoryUrl: string) {
+export async function getProjectScript(repositoryUrl: string, scriptType?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -375,14 +382,21 @@ export async function getProjectScript(repositoryUrl: string) {
     throw new Error('Unauthorized')
   }
 
-  const { data: script, error } = await supabase
+  let query = supabase
     .from('narrative_scripts')
     .select('*')
     .eq('user_id', user.id)
     .eq('repository_url', repositoryUrl)
+
+  // If scriptType specified, filter by it
+  if (scriptType) {
+    query = query.eq('script_type', scriptType)
+  }
+
+  const { data: script, error } = await query
     .order('created_at', { ascending: false })
     .limit(1)
-    .single()
+    .maybeSingle()
 
   if (error) {
     console.error('Error fetching script:', error)
@@ -390,4 +404,41 @@ export async function getProjectScript(repositoryUrl: string) {
   }
 
   return script
+}
+
+/**
+ * Get all scripts for a project (both User Journey and Technical Architecture if they exist)
+ */
+export async function getProjectScripts(repositoryUrl: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  console.log('[getProjectScripts] Fetching scripts for repository:', repositoryUrl)
+  console.log('[getProjectScripts] User ID:', user.id)
+
+  const { data: scripts, error } = await supabase
+    .from('narrative_scripts')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('repository_url', repositoryUrl)
+    .order('script_type', { ascending: true }) // user_journey comes before technical_architecture
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    console.error('[getProjectScripts] Error fetching scripts:', error)
+    return []
+  }
+
+  console.log('[getProjectScripts] Found', scripts?.length || 0, 'script(s)')
+  if (scripts && scripts.length > 0) {
+    scripts.forEach((s, i) => {
+      console.log(`  [${i + 1}] Type: ${s.script_type || 'NULL'}, Repo: ${s.repository_url}`)
+    })
+  }
+
+  return scripts || []
 }

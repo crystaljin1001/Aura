@@ -17,6 +17,7 @@ import type { Project } from '../types'
 import { ScriptEditorModal } from './ScriptEditorModal'
 import { VideoUploadModal } from './VideoUploadModal'
 import { ViewScriptModal } from './ViewScriptModal'
+import { EditScriptTextModal } from './EditScriptTextModal'
 import { CompletnessBadge } from '@/features/portfolio/components/CompletnessBadge'
 
 interface ProjectCardProps {
@@ -27,6 +28,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const [showScriptModal, setShowScriptModal] = useState(false)
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [showViewScriptModal, setShowViewScriptModal] = useState(false)
+  const [showEditScriptModal, setShowEditScriptModal] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function handleDelete() {
@@ -147,14 +149,17 @@ export function ProjectCard({ project }: ProjectCardProps) {
                 ⋯ More Options
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuContent align="end" className="w-56">
               {project.hasScript && (
                 <>
                   <DropdownMenuItem onClick={() => setShowViewScriptModal(true)}>
                     📄 View Script
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowEditScriptModal(true)}>
+                    ✏️ Edit Script Text
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowScriptModal(true)}>
-                    ✏️ Edit Script
+                    🔄 Regenerate Script
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
@@ -194,6 +199,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
         project={project}
         isOpen={showViewScriptModal}
         onClose={() => setShowViewScriptModal(false)}
+      />
+      <EditScriptTextModal
+        project={project}
+        isOpen={showEditScriptModal}
+        onClose={() => setShowEditScriptModal(false)}
       />
     </>
   )

@@ -10,7 +10,7 @@ import { generateScript } from '../api/actions';
 import { fetchReadmeFromGitHub } from '../api/github-actions';
 import { getUserRepositories } from '@/features/impact-engine/api/repository-actions';
 import { ScriptDisplay } from './ScriptDisplay';
-import type { NarrativeScript } from '../types';
+import type { NarrativeScript, ScriptType } from '../types';
 import type { RepoIdentifier } from '@/lib/validations/impact-engine';
 
 interface StoryboardFormProps {
@@ -23,21 +23,29 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
   const [selectedRepo, setSelectedRepo] = useState<string>(preSelectedRepo || '');
   const [projectName, setProjectName] = useState('');
   const [readmeContent, setReadmeContent] = useState('');
+  const [scriptType, setScriptType] = useState<ScriptType>('user_journey');
   const [isFetchingReadme, setIsFetchingReadme] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedScript, setGeneratedScript] = useState<NarrativeScript | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [fetchedFrom, setFetchedFrom] = useState<string | null>(null);
+  const [showReadmeEditor, setShowReadmeEditor] = useState(false);
 
   // Load user's repositories on mount
   useEffect(() => {
     loadRepositories();
   }, []);
 
-  // Auto-fetch README if preSelectedRepo is provided
+  // Auto-fetch README if preSelectedRepo is provided (coming from project card)
   useEffect(() => {
     if (preSelectedRepo && !readmeContent) {
+      // Auto-fetch README in background
       handleFetchReadme();
+      // Don't show README editor by default when coming from project card
+      setShowReadmeEditor(false);
+    } else if (!preSelectedRepo) {
+      // Show README editor if not coming from project card
+      setShowReadmeEditor(true);
     }
   }, [preSelectedRepo]);
 
@@ -80,7 +88,7 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
     setGeneratedScript(null);
 
     try {
-      const result = await generateScript(projectName, readmeContent, selectedRepo || preSelectedRepo);
+      const result = await generateScript(projectName, readmeContent, selectedRepo || preSelectedRepo, scriptType);
 
       if (result.success && result.data) {
         setGeneratedScript(result.data);
@@ -131,16 +139,40 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
     <div className="w-full max-w-4xl mx-auto">
       <div className="rounded-lg p-8">
         <h2 className="text-2xl font-bold mb-2 text-foreground">
-          Create Your Video Demo Script
+          {preSelectedRepo ? 'Generate Demo Scripts' : 'Create Your Video Demo Script'}
         </h2>
         <p className="text-muted-foreground mb-6">
-          Select a connected repository to fetch its README, or write your own.
-          Then generate a professionally structured video script.
+          {preSelectedRepo ? (
+            <>
+              Choose between <strong>User Journey</strong> (outcome-focused) or <strong>Technical Architecture</strong> (technical deep-dive) demo.
+              README and commit history will be analyzed automatically.
+            </>
+          ) : (
+            <>
+              Choose between <strong>User Journey</strong> (outcome-focused) or <strong>Technical Architecture</strong> (technical deep-dive) demo.
+              Select a repository to fetch its README, then generate a chaptered narrative with visual cues.
+            </>
+          )}
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Repository Selector */}
-          {repositories.length > 0 && (
+          {/* Project Display - Show if pre-selected */}
+          {preSelectedRepo && (
+            <div className="p-4 bg-blue-900/20 border border-blue-800 rounded-lg">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📂</span>
+                <div>
+                  <p className="font-semibold text-foreground">{preSelectedRepo}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {isFetchingReadme ? 'Loading README and project data...' : 'README loaded • Commit history fetched'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Repository Selector - Only show if not pre-selected */}
+          {!preSelectedRepo && repositories.length > 0 && (
             <div>
               <label
                 htmlFor="repository"
@@ -225,6 +257,68 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
             </div>
           )}
 
+          {/* Demo Type Selection */}
+          <div>
+            <label className="block text-sm font-medium text-foreground mb-3">
+              🎬 Choose Demo Type *
+            </label>
+            <div className="space-y-3">
+              {/* User Journey Option */}
+              <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                scriptType === 'user_journey'
+                  ? 'border-blue-500 bg-blue-500/10'
+                  : 'border-border hover:border-blue-500/50 bg-background'
+              }`}>
+                <input
+                  type="radio"
+                  name="scriptType"
+                  value="user_journey"
+                  checked={scriptType === 'user_journey'}
+                  onChange={(e) => setScriptType(e.target.value as ScriptType)}
+                  disabled={isGenerating}
+                  className="mt-1 mr-3"
+                />
+                <div className="flex-1">
+                  <div className="font-semibold text-foreground">
+                    📖 User Journey Demo
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    Outcome-focused narrative showing value through user success.
+                    Chapters: The Friction → The Social Brain → The Discovery → The Resolution.
+                    Perfect for showcasing AI impact and user wins.
+                  </div>
+                </div>
+              </label>
+
+              {/* Technical Architecture Option */}
+              <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
+                scriptType === 'technical_architecture'
+                  ? 'border-purple-500 bg-purple-500/10'
+                  : 'border-border hover:border-purple-500/50 bg-background'
+              }`}>
+                <input
+                  type="radio"
+                  name="scriptType"
+                  value="technical_architecture"
+                  checked={scriptType === 'technical_architecture'}
+                  onChange={(e) => setScriptType(e.target.value as ScriptType)}
+                  disabled={isGenerating}
+                  className="mt-1 mr-3"
+                />
+                <div className="flex-1">
+                  <div className="font-semibold text-foreground">
+                    🏗️ Technical Architecture Demo
+                  </div>
+                  <div className="text-sm text-muted-foreground mt-1">
+                    Technical deep-dive with structural constraints.
+                    Chapters: Context → The Logic Gate → The Execution → The Moat.
+                    Perfect for showcasing engineering decisions and technical depth.
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+
           {/* Project Name */}
           <div>
             <label
@@ -246,30 +340,54 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
             />
           </div>
 
-          {/* README Content */}
+          {/* README Content - Collapsible if auto-fetched */}
           <div>
-            <label
-              htmlFor="readmeContent"
-              className="block text-sm font-medium text-foreground mb-2"
-            >
-              Project README *
-            </label>
-            <textarea
-              id="readmeContent"
-              value={readmeContent}
-              onChange={(e) => setReadmeContent(e.target.value)}
-              placeholder="Fetch from a repository above, or paste your project README here..."
-              disabled={isGenerating}
-              required
-              minLength={50}
-              maxLength={10000}
-              rows={12}
-              className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm"
-            />
-            <p className="mt-2 text-sm text-muted-foreground">
-              {readmeContent.length}/10,000 characters • Minimum 50 characters
-              {fetchedFrom && ' • Editable'}
-            </p>
+            <div className="flex items-center justify-between mb-2">
+              <label
+                htmlFor="readmeContent"
+                className="block text-sm font-medium text-foreground"
+              >
+                Project README *
+                {fetchedFrom && <span className="ml-2 text-xs text-green-400">✓ Auto-fetched</span>}
+              </label>
+              {preSelectedRepo && fetchedFrom && (
+                <button
+                  type="button"
+                  onClick={() => setShowReadmeEditor(!showReadmeEditor)}
+                  className="text-sm text-blue-400 hover:text-blue-300"
+                >
+                  {showReadmeEditor ? '▼ Hide README' : '▶ View/Edit README'}
+                </button>
+              )}
+            </div>
+
+            {showReadmeEditor && (
+              <>
+                <textarea
+                  id="readmeContent"
+                  value={readmeContent}
+                  onChange={(e) => setReadmeContent(e.target.value)}
+                  placeholder="Fetch from a repository above, or paste your project README here..."
+                  disabled={isGenerating}
+                  required
+                  minLength={50}
+                  maxLength={10000}
+                  rows={12}
+                  className="w-full px-4 py-3 border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent bg-background text-foreground disabled:opacity-50 disabled:cursor-not-allowed font-mono text-sm"
+                />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  {readmeContent.length}/10,000 characters • Minimum 50 characters
+                  {fetchedFrom && ' • You can edit before generating'}
+                </p>
+              </>
+            )}
+
+            {!showReadmeEditor && preSelectedRepo && fetchedFrom && (
+              <div className="p-3 bg-green-900/20 border border-green-800 rounded-lg text-sm text-green-200">
+                README loaded from {fetchedFrom} ({readmeContent.length} characters).
+                AI will also use commit history and Logic Map data.
+              </div>
+            )}
           </div>
 
           {/* Error Message */}
@@ -336,11 +454,12 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
             💡 How it works:
           </h3>
           <ul className="text-sm text-blue-300 space-y-1 list-disc list-inside">
+            <li>Choose your demo type: <strong>User Journey</strong> (value-focused) or <strong>Technical Architecture</strong> (engineering-focused)</li>
             <li>Select a connected repository to auto-fetch its README</li>
-            <li>Edit the README if needed before generating</li>
-            <li>AI analyzes your README using GPT-4o-mini</li>
-            <li>Generates a 2.5-3.5 minute structured script</li>
-            <li>Follows proven Context → Problem → Process → Outcome narrative</li>
+            <li>AI analyzes your README, commit history, and Logic Map using GPT-4o-mini with specialized prompts</li>
+            <li>Generates a 3-5 minute chaptered narrative with visual cues</li>
+            <li><strong>User Journey</strong>: Shows AI impact through user success stories</li>
+            <li><strong>Technical Architecture</strong>: Deep-dive into decisions, trade-offs, and engineering depth</li>
             <li>Ready to use with Tella, Arcade, or any recording tool</li>
           </ul>
         </div>
