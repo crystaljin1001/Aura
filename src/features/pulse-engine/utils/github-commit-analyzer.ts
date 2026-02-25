@@ -177,13 +177,25 @@ export async function fetchCommitsWithStats(
 }
 
 /**
- * Calculate days active (days with at least one commit)
+ * Calculate days active (duration from first commit to last commit)
  */
 export function calculateDaysActive(commits: CommitData[]): number {
-  const uniqueDates = new Set(
-    commits.map(c => new Date(c.date).toISOString().split('T')[0])
-  )
-  return uniqueDates.size
+  if (commits.length === 0) return 0
+  if (commits.length === 1) return 1 // Single commit = 1 day
+
+  // Get timestamps of all commits
+  const timestamps = commits.map(c => new Date(c.date).getTime())
+
+  // Find earliest and latest commit
+  const firstCommitTime = Math.min(...timestamps)
+  const lastCommitTime = Math.max(...timestamps)
+
+  // Calculate duration in days
+  const durationMs = lastCommitTime - firstCommitTime
+  const durationDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24))
+
+  // Return at least 1 day (if commits on same day)
+  return Math.max(1, durationDays)
 }
 
 /**

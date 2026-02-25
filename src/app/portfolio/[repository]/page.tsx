@@ -24,7 +24,7 @@ import { TechnicalJourneySectionWithEdit } from '@/features/portfolio/components
 import { TechnicalDecisionsSection } from '@/features/portfolio/components/TechnicalDecisionsSection'
 import { ProfessionalProjectAssessment } from '@/features/portfolio/components/ProfessionalProjectAssessment'
 import { CritiqueButton } from '@/features/portfolio/components/CritiqueButton'
-import { PulseMetricsCard } from '@/features/pulse-engine/components/PulseMetricsCard'
+import { DualPulseCard } from '@/features/engineering-rigor/components/DualPulseCard'
 import { LogicMapContainer } from '@/features/portfolio/components/LogicMapContainer'
 import { LogicMapJsonLd } from '@/features/portfolio/components/LogicMapJsonLd'
 
@@ -315,12 +315,9 @@ export default async function CaseStudyPage({ params }: PageProps) {
         </section>
       )}
 
-      {/* Pulse Engine - Velocity & Uptime */}
+      {/* Dual Pulse - Velocity & Engineering Rigor */}
       <section className="max-w-5xl mx-auto px-6 py-16">
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-12 text-center">
-          Development Pulse
-        </h2>
-        <PulseMetricsCard repositoryUrl={repositoryUrl} />
+        <DualPulseCard repositoryUrl={repositoryUrl} />
       </section>
 
       {/* Architecture Diagram (if available) */}
