@@ -32,7 +32,7 @@ Main component that renders the complete hiring dashboard interface.
 
 ### Mini Spider Map
 - 80x80px pentagon visualization
-- 5 dimensions: Video, Logic, Quality, Flow, Scale
+- 5 dimensions: Product & Business Sense, Communication & Impact, Quality & Scalability, Velocity & Focus, AI Fluency
 - Color-coded per candidate
 - Animated entrance
 

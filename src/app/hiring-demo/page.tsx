@@ -58,8 +58,8 @@ export default function HiringDemoPage() {
               <div className="text-4xl mb-3">🕸️</div>
               <h3 className="text-lg font-semibold mb-2">Spider Map at a Glance</h3>
               <p className="text-sm text-muted-foreground">
-                Instantly visualize technical strengths across Video narrative,
-                Logic clarity, Code quality, Development flow, and Scale patterns.
+                Instantly visualize technical strengths across Product & Business Sense,
+                Communication & Impact, Quality & Scalability, Velocity & Focus, and AI Fluency.
               </p>
             </div>
           </div>
@@ -104,36 +104,36 @@ export default function HiringDemoPage() {
                     <div className="flex items-start gap-2">
                       <span className="text-pink-400">•</span>
                       <div>
-                        <strong className="text-pink-400">Video Agent</strong>
-                        <span className="text-muted-foreground"> - Product thinking & narrative clarity</span>
+                        <strong className="text-pink-400">Product Agent</strong>
+                        <span className="text-muted-foreground"> - Business sense & user-facing feature delivery</span>
                       </div>
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="text-purple-400">•</span>
                       <div>
-                        <strong className="text-purple-400">Logic Agent</strong>
-                        <span className="text-muted-foreground"> - Architectural decision quality</span>
+                        <strong className="text-purple-400">Communication Agent</strong>
+                        <span className="text-muted-foreground"> - Narrative clarity & architectural documentation</span>
                       </div>
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="text-blue-400">•</span>
                       <div>
-                        <strong className="text-blue-400">Quality Agent</strong>
-                        <span className="text-muted-foreground"> - Error handling & edge cases</span>
+                        <strong className="text-blue-400">Quality/Scalability Agent</strong>
+                        <span className="text-muted-foreground"> - Error handling, infrastructure patterns & production readiness</span>
                       </div>
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="text-yellow-400">•</span>
                       <div>
-                        <strong className="text-yellow-400">Flow Agent</strong>
-                        <span className="text-muted-foreground"> - Commit quality & atomicity</span>
+                        <strong className="text-yellow-400">Velocity Agent</strong>
+                        <span className="text-muted-foreground"> - Commit quality, atomicity & shipping speed</span>
                       </div>
                     </div>
                     <div className="flex items-start gap-2">
                       <span className="text-green-400">•</span>
                       <div>
-                        <strong className="text-green-400">Scale Agent</strong>
-                        <span className="text-muted-foreground"> - Infrastructure patterns (Redis, Kafka)</span>
+                        <strong className="text-green-400">AI Fluency Agent</strong>
+                        <span className="text-muted-foreground"> - AI tool usage (Cursor, Copilot, v0) & agentic architecture</span>
                       </div>
                     </div>
                   </div>

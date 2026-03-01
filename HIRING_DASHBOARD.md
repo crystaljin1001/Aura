@@ -86,11 +86,11 @@ Each candidate card shows:
 
 #### Stats Summary
 - 5 cards showing each dimension score
-- Video: 9.2/10
-- Logic: 9.5/10
-- Quality: 8.8/10
-- Flow: 9.0/10
-- Scale: 9.3/10
+- Product & Business Sense: 9.9/10
+- Communication & Impact: 7.0/10
+- Quality & Scalability: 6.5/10
+- Velocity & Focus: 6.0/10
+- AI Fluency: 8.5/10
 
 ## 🎨 Design Features
 
