@@ -227,7 +227,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
           // Index 3: Velocity & Focus (lower left)
           // Index 4: AI Fluency (upper left)
           let labelRadius = maxRadius + 45
-          if (i === 0) labelRadius = maxRadius + 48 // top - needs more space
+          if (i === 0) labelRadius = maxRadius + 45 // top - aligned with sides
           if (i === 2) labelRadius = maxRadius + 42 // lower right - closer
           if (i === 3) labelRadius = maxRadius + 42 // lower left - closer
           const x = center + labelRadius * Math.cos(angle)
