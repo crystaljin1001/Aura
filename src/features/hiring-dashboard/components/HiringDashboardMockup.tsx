@@ -126,8 +126,8 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
               return `${x},${y}`
             }).join(' ')}
             fill="none"
-            stroke="rgba(255,255,255,0.05)"
-            strokeWidth="1"
+            stroke={scale === 1.0 ? "rgba(255,255,255,0.2)" : "rgba(255,255,255,0.1)"}
+            strokeWidth={scale === 1.0 ? "2" : "1"}
           />
         ))}
 
