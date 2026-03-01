@@ -220,7 +220,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
         {/* Labels and values */}
         {data.map((d, i) => {
           const angle = (Math.PI * 2 * i) / data.length - Math.PI / 2
-          const labelRadius = maxRadius + 60
+          const labelRadius = maxRadius + 45
           const x = center + labelRadius * Math.cos(angle)
           const y = center + labelRadius * Math.sin(angle)
 
@@ -234,14 +234,17 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
               style={{ cursor: 'pointer' }}
               className="group"
             >
-              {/* Hover background circle */}
-              <circle
-                cx={x}
-                cy={y}
-                r="35"
-                fill="white"
-                opacity="0"
-                className="group-hover:opacity-5 transition-opacity"
+              {/* Clickable border/background */}
+              <rect
+                x={x - 38}
+                y={y - 18}
+                width="76"
+                height="36"
+                rx="8"
+                fill="rgba(59, 130, 246, 0.05)"
+                stroke="rgba(59, 130, 246, 0.3)"
+                strokeWidth="1"
+                className="group-hover:fill-blue-500/20 group-hover:stroke-blue-400 transition-all"
               />
 
               {labelParts.length === 2 ? (
@@ -251,7 +254,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
                     y={y - 6}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fill="white"
+                    fill="rgba(147, 197, 253, 0.9)"
                     fontSize="7"
                     fontWeight="600"
                     fontFamily="system-ui"
@@ -264,7 +267,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
                     y={y + 2}
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    fill="white"
+                    fill="rgba(147, 197, 253, 0.9)"
                     fontSize="7"
                     fontWeight="600"
                     fontFamily="system-ui"
@@ -279,7 +282,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
                   y={y}
                   textAnchor="middle"
                   dominantBaseline="middle"
-                  fill="white"
+                  fill="rgba(147, 197, 253, 0.9)"
                   fontSize="7"
                   fontWeight="600"
                   fontFamily="system-ui"
