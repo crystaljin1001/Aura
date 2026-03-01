@@ -510,7 +510,7 @@ export function HiringDashboardMockup() {
                     <Play className="w-4 h-4 text-pink-400" />
                     <h3 className="font-semibold text-white">User Journey Demo</h3>
                   </div>
-                  <p className="text-xs text-white/50 mt-1">1:30 / 1:30 • Product & Business Sense Evidence</p>
+                  <p className="text-xs text-white/50 mt-1">0:00 / 1:30 • Product & Business Sense Evidence</p>
                 </div>
                 <div className="aspect-video bg-gradient-to-br from-pink-500/10 to-purple-500/10 relative flex items-center justify-center">
                   {/* Mockup UI */}
@@ -547,7 +547,7 @@ export function HiringDashboardMockup() {
                     <Play className="w-4 h-4 text-blue-400" />
                     <h3 className="font-semibold text-white">Architecture Walkthrough</h3>
                   </div>
-                  <p className="text-xs text-white/50 mt-1">1:15 / 4:33</p>
+                  <p className="text-xs text-white/50 mt-1">0:00 / 1:30</p>
                 </div>
                 <div className="aspect-video bg-gradient-to-br from-blue-500/10 to-cyan-500/10 relative flex items-center justify-center">
                   {/* Mockup Diagram */}

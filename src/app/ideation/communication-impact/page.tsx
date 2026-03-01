@@ -108,7 +108,7 @@ export default function CommunicationImpactPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-muted-foreground">Duration</span>
-                  <span className="text-sm font-medium text-foreground">1:30 / 1:30</span>
+                  <span className="text-sm font-medium text-foreground">0:00 / 1:30</span>
                 </div>
               </div>
             </div>
