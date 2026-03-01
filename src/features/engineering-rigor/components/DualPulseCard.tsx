@@ -367,7 +367,7 @@ export function DualPulseCard({
                 label="Refactor Signal"
                 score={rigor.breakdown.refactoring.score}
                 max={1.5}
-                description={rigor.breakdown.refactoring.category}
+                description={rigor.breakdown.refactoring.category !== 'Balanced' ? rigor.breakdown.refactoring.category : undefined}
               />
               <ScoreBar
                 label="Documentation"
@@ -424,7 +424,7 @@ function ScoreBar({
   label: string
   score: number
   max: number
-  description: string
+  description?: string
 }) {
   const percentage = (score / max) * 100
 
@@ -442,7 +442,9 @@ function ScoreBar({
           style={{ width: `${percentage}%` }}
         />
       </div>
-      <p className="text-xs text-muted-foreground mt-1">{description}</p>
+      {description && (
+        <p className="text-xs text-muted-foreground mt-1">{description}</p>
+      )}
     </div>
   )
 }
