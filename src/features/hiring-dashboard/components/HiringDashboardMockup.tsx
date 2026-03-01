@@ -251,7 +251,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
                 <>
                   <text
                     x={x}
-                    y={y - 6}
+                    y={y - 9}
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fill="rgba(147, 197, 253, 0.9)"
@@ -264,7 +264,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
                   </text>
                   <text
                     x={x}
-                    y={y + 2}
+                    y={y - 1}
                     textAnchor="middle"
                     dominantBaseline="middle"
                     fill="rgba(147, 197, 253, 0.9)"
@@ -279,7 +279,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
               ) : (
                 <text
                   x={x}
-                  y={y}
+                  y={y - 7}
                   textAnchor="middle"
                   dominantBaseline="middle"
                   fill="rgba(147, 197, 253, 0.9)"
@@ -293,7 +293,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
               )}
               <text
                 x={x}
-                y={y + 12}
+                y={y + 9}
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill={color}
