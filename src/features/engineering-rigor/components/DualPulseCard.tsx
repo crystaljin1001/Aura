@@ -166,14 +166,6 @@ export function DualPulseCard({
                 {velocity.raw_data.avg_commits_per_day} Commits/Day
               </p>
             </div>
-
-            {/* AI Context */}
-            <div className="bg-blue-500/10 p-3 rounded-lg border border-blue-500/30">
-              <p className="text-xs text-blue-400">
-                <strong>AI Context:</strong>{' '}
-                {getVelocityAIContext(velocity.score, velocity.label)}
-              </p>
-            </div>
           </div>
 
           {/* Right: Engineering Rigor */}
