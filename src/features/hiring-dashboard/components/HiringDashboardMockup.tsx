@@ -220,8 +220,16 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
         {/* Labels and values */}
         {data.map((d, i) => {
           const angle = (Math.PI * 2 * i) / data.length - Math.PI / 2
-          // Adjust label distance for visual balance - closer for top, top-right, and bottom-left
-          const labelRadius = (i === 0 || i === 1 || i === 3) ? maxRadius + 38 : maxRadius + 45
+          // Adjust label distance for visual balance based on angular position
+          // Index 0: Product & Business Sense (top)
+          // Index 1: Communication & Impact (upper right)
+          // Index 2: Quality & Scalability (lower right)
+          // Index 3: Velocity & Focus (lower left)
+          // Index 4: AI Fluency (upper left)
+          let labelRadius = maxRadius + 45
+          if (i === 0) labelRadius = maxRadius + 48 // top - needs more space
+          if (i === 2) labelRadius = maxRadius + 42 // lower right - closer
+          if (i === 3) labelRadius = maxRadius + 42 // lower left - closer
           const x = center + labelRadius * Math.cos(angle)
           const y = center + labelRadius * Math.sin(angle)
 
