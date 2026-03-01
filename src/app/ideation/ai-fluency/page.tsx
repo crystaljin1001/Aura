@@ -24,10 +24,10 @@ export default function AIFluencyPage() {
               </span>
             </div>
             <h1 className="text-5xl md:text-6xl font-black text-foreground mb-6">
-              AI Fluency Categories
+              AI Fluency Summary
             </h1>
             <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-              Three-tier assessment of AI-assisted development practices, from basic tool usage to agentic architecture.
+              Three-category assessment of AI-assisted development practices, from basic tool usage to agentic architecture.
             </p>
           </div>
 
@@ -44,7 +44,7 @@ export default function AIFluencyPage() {
             </div>
           </div>
 
-          {/* Tier 1: Vibe Coding & Velocity */}
+          {/* Category 1: Vibe Coding & Velocity */}
           <div className="glass-card p-8 rounded-xl border border-green-500/30 bg-green-500/5 mb-8">
             <div className="flex items-start gap-4 mb-6">
               <div className="flex-shrink-0 p-3 bg-green-500/20 border border-green-500/40 rounded-lg">
@@ -52,7 +52,7 @@ export default function AIFluencyPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold text-foreground">Tier 1: Vibe Coding & Velocity</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Category 1: Vibe Coding & Velocity</h2>
                   <span className="px-3 py-1 bg-green-500/20 border border-green-500/40 rounded-full text-sm font-bold text-green-300">
                     High
                   </span>
@@ -146,7 +146,7 @@ export default function AIFluencyPage() {
             </div>
           </div>
 
-          {/* Tier 2: Workflow Automation */}
+          {/* Category 2: Workflow Automation */}
           <div className="glass-card p-8 rounded-xl border border-green-500/30 bg-green-500/5 mb-8">
             <div className="flex items-start gap-4 mb-6">
               <div className="flex-shrink-0 p-3 bg-green-500/20 border border-green-500/40 rounded-lg">
@@ -154,7 +154,7 @@ export default function AIFluencyPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold text-foreground">Tier 2: Workflow Automation & Testing</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Category 2: Workflow Automation & Testing</h2>
                   <span className="px-3 py-1 bg-yellow-500/20 border border-yellow-500/40 rounded-full text-sm font-bold text-yellow-300">
                     Medium
                   </span>
@@ -209,7 +209,7 @@ export default function AIFluencyPage() {
             </div>
           </div>
 
-          {/* Tier 3: Agentic Architecture */}
+          {/* Category 3: Agentic Architecture */}
           <div className="glass-card p-8 rounded-xl border border-green-500/30 bg-green-500/5">
             <div className="flex items-start gap-4 mb-6">
               <div className="flex-shrink-0 p-3 bg-green-500/20 border border-green-500/40 rounded-lg">
@@ -217,7 +217,7 @@ export default function AIFluencyPage() {
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-2xl font-bold text-foreground">Tier 3: Agentic Architecture</h2>
+                  <h2 className="text-2xl font-bold text-foreground">Category 3: Agentic Architecture</h2>
                   <span className="px-3 py-1 bg-red-500/20 border border-red-500/40 rounded-full text-sm font-bold text-red-300">
                     Low
                   </span>
@@ -278,9 +278,9 @@ export default function AIFluencyPage() {
           <div className="glass-card-glow p-8 rounded-2xl border border-green-500/30 bg-green-500/5">
             <h2 className="text-2xl font-bold mb-4">AI Context</h2>
             <p className="text-muted-foreground">
-              <strong className="text-green-400">Proficient AI Tool User:</strong> Strong foundation in Tier 1 AI
+              <strong className="text-green-400">Proficient AI Tool User:</strong> Strong foundation in Category 1 AI
               coding tools (Cursor, Copilot, v0) with 68% acceptance rate and rapid prototyping velocity. Moderate
-              Tier 2 adoption with AI-assisted documentation and PR reviews. Tier 3 agentic architecture not yet
+              Category 2 adoption with AI-assisted documentation and PR reviews. Category 3 agentic architecture not yet
               explored—opportunity for growth in RAG pipelines and multi-agent systems. Excellent fit for modern
               product development teams leveraging AI for velocity.
             </p>
