@@ -206,13 +206,6 @@ export function DualPulseCard({
               <p className="text-xs text-muted-foreground mb-1">Key Signals</p>
               <p className="font-semibold">{rigor.key_signals.join(' | ')}</p>
             </div>
-
-            {/* AI Context */}
-            <div className="bg-green-500/10 p-3 rounded-lg border border-green-500/30">
-              <p className="text-xs text-green-400">
-                <strong>AI Context:</strong> {rigor.ai_context}
-              </p>
-            </div>
           </div>
         </div>
 

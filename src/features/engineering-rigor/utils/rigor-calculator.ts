@@ -525,18 +525,9 @@ export function calculateEngineeringRigor(
 
   // Build AI context with proper formatting
   const keySignalsText = key_signals.slice(0, 2).filter(Boolean).join(', ')
-  console.log('🐛 AI Context Debug:', {
-    category,
-    grade,
-    key_signals,
-    keySignalsText,
-    refactoring_category: refactoring.category,
-    refactorSuffix,
-  })
   const ai_context = keySignalsText
     ? `${category} project with ${grade} grade. ${keySignalsText}.${refactorSuffix}`
     : `${category} project with ${grade} grade.${refactorSuffix}`
-  console.log('🐛 Final ai_context:', ai_context)
 
   return {
     overall_score: Math.round(overall_score * 10) / 10,
