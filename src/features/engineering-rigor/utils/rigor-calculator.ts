@@ -523,7 +523,11 @@ export function calculateEngineeringRigor(
     ? ' High code growth without proportional refactoring.'
     : ''
 
-  const ai_context = `${category} project with ${grade} grade. ${key_signals.slice(0, 2).join(', ')}.${refactorSuffix}`
+  // Build AI context with proper formatting
+  const keySignalsText = key_signals.slice(0, 2).filter(Boolean).join(', ')
+  const ai_context = keySignalsText
+    ? `${category} project with ${grade} grade. ${keySignalsText}.${refactorSuffix}`
+    : `${category} project with ${grade} grade.${refactorSuffix}`
 
   return {
     overall_score: Math.round(overall_score * 10) / 10,
