@@ -47,10 +47,10 @@ export default function HiringDemoPage() {
 
             <div className="glass-card p-6 rounded-xl border border-border">
               <div className="text-4xl mb-3">🎥</div>
-              <h3 className="text-lg font-semibold mb-2">Video Demos Included</h3>
+              <h3 className="text-lg font-semibold mb-2">Two 90-Second Demos</h3>
               <p className="text-sm text-muted-foreground">
-                Watch candidates explain their projects through Product Demos
-                and Architecture Walkthroughs. No resume parsing needed.
+                Watch candidates explain their projects through a User Journey Demo
+                and an Architecture Demo. No resume parsing needed.
               </p>
             </div>
 
@@ -79,12 +79,13 @@ export default function HiringDemoPage() {
                   <h3 className="text-xl font-semibold mb-2">Candidates Build Their Aura Profile</h3>
                   <p className="text-muted-foreground mb-3">
                     Engineers connect their GitHub, create a Logic Map of architectural decisions,
-                    and record a 90-second demo video. No resume writing needed.
+                    and record two 90-second demos. No resume writing needed.
                   </p>
                   <ul className="text-sm text-muted-foreground space-y-1">
-                    <li>• GitHub activity analyzed for code quality and velocity</li>
-                    <li>• Logic Map evaluated for architectural clarity</li>
-                    <li>• Video demo scored for product narrative</li>
+                    <li>• GitHub activity analyzed for AI fluency, code quality, and velocity</li>
+                    <li>• Logic Map evaluated for trade-off reasoning ability</li>
+                    <li>• 90-second User Journey Demo scored for product thinking and communication</li>
+                    <li>• 90-second Architecture Demo scored for architecture design</li>
                   </ul>
                 </div>
               </div>
