@@ -103,6 +103,31 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
   const center = size / 2
   const maxRadius = 100
 
+  // Define evidence pages for each pillar
+  const evidencePages: Record<string, { url: string }> = {
+    'Product & Business Sense': { url: '#user-journey-demo' }, // Scroll to video on same page
+    'Communication & Impact': { url: '/ideation/communication-impact' },
+    'Quality & Scalability': { url: '/ideation/quality-scalability' },
+    'Velocity & Focus': { url: '/ideation/velocity-focus' },
+    'AI Fluency': { url: '/ideation/ai-fluency' },
+  }
+
+  const handlePillarClick = (label: string) => {
+    const evidence = evidencePages[label]
+    if (!evidence) return
+
+    // For local anchors, scroll smoothly
+    if (evidence.url.startsWith('#')) {
+      const element = document.getElementById(evidence.url.substring(1))
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    } else {
+      // For actual pages, navigate
+      window.location.href = evidence.url
+    }
+  }
+
   // Calculate polygon points
   const points = data.map((d, i) => {
     const angle = (Math.PI * 2 * i) / data.length - Math.PI / 2
@@ -203,7 +228,22 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
           const labelParts = d.label.split(' & ')
 
           return (
-            <g key={`label-${i}`}>
+            <g
+              key={`label-${i}`}
+              onClick={() => handlePillarClick(d.label)}
+              style={{ cursor: 'pointer' }}
+              className="group"
+            >
+              {/* Hover background circle */}
+              <circle
+                cx={x}
+                cy={y}
+                r="35"
+                fill="white"
+                opacity="0"
+                className="group-hover:opacity-5 transition-opacity"
+              />
+
               {labelParts.length === 2 ? (
                 <>
                   <text
@@ -215,6 +255,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
                     fontSize="7"
                     fontWeight="600"
                     fontFamily="system-ui"
+                    className="group-hover:fill-blue-300 transition-colors"
                   >
                     {labelParts[0]}
                   </text>
@@ -227,6 +268,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
                     fontSize="7"
                     fontWeight="600"
                     fontFamily="system-ui"
+                    className="group-hover:fill-blue-300 transition-colors"
                   >
                     & {labelParts[1]}
                   </text>
@@ -241,6 +283,7 @@ function CompactBuilderProfile({ data, color }: { data: { label: string; value: 
                   fontSize="7"
                   fontWeight="600"
                   fontFamily="system-ui"
+                  className="group-hover:fill-blue-300 transition-colors"
                 >
                   {d.label}
                 </text>
@@ -456,7 +499,8 @@ export function HiringDashboardMockup() {
             <div className="grid grid-cols-2 gap-6 mb-6">
               {/* Product Demo Video */}
               <motion.div
-                className="bg-white/[0.02] border border-white/10 rounded-xl overflow-hidden"
+                id="user-journey-demo"
+                className="bg-white/[0.02] border border-white/10 rounded-xl overflow-hidden scroll-mt-20"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
@@ -464,9 +508,9 @@ export function HiringDashboardMockup() {
                 <div className="p-4 border-b border-white/10">
                   <div className="flex items-center gap-2">
                     <Play className="w-4 h-4 text-pink-400" />
-                    <h3 className="font-semibold text-white">Product Demo</h3>
+                    <h3 className="font-semibold text-white">User Journey Demo</h3>
                   </div>
-                  <p className="text-xs text-white/50 mt-1">2:34 / 5:12</p>
+                  <p className="text-xs text-white/50 mt-1">1:30 / 1:30 • Product & Business Sense Evidence</p>
                 </div>
                 <div className="aspect-video bg-gradient-to-br from-pink-500/10 to-purple-500/10 relative flex items-center justify-center">
                   {/* Mockup UI */}

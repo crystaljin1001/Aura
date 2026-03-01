@@ -134,14 +134,14 @@ export function DualPulseCard({
         <h2 className="text-2xl font-bold mb-8 text-center">Project Pulse</h2>
 
         <div className="grid md:grid-cols-2 gap-8">
-          {/* Left: Velocity Pulse */}
+          {/* Left: Velocity */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="p-2 bg-yellow-500/20 rounded-lg">
                 <Zap className="w-6 h-6 text-yellow-400" />
               </div>
               <div>
-                <h3 className="text-lg font-semibold">Velocity Pulse</h3>
+                <h3 className="text-lg font-semibold">Velocity</h3>
                 <p className="text-xs text-muted-foreground">The Speed</p>
               </div>
             </div>
