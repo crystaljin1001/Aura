@@ -17,11 +17,11 @@ const mockCandidates: Candidate[] = [
     rank: 1,
     title: '', // Not shown anymore
     avatarColor: '#10b981',
-    aiRanking: '🏆 **Archetype:** The Product Visionary\n\n🟢 **Superpower:** Exceptional product & business sense (9.9/10) shows rare ability to translate user needs into technical solutions. Strong AI fluency (8.5/10) with heavy Cursor usage and GitHub Copilot integration for rapid prototyping.\n\n⚠️ **Trade-off:** Moderate quality/scalability (6.5/10) - may need guidance on production-grade error handling and infrastructure patterns.',
+    aiRanking: '🏆 **Archetype:** The Product Visionary\n\n🟢 **Superpower:** Exceptional product & business sense (9.9/10) shows rare ability to translate user needs into technical solutions. Strong AI fluency (8.5/10) with heavy Cursor usage and GitHub Copilot integration for rapid prototyping.\n\n✓ **Well-Rounded:** Strong quality & scalability (7.9/10) with excellent documentation and technical storytelling. Primary growth area: expanding test coverage across projects.',
     spiderMap: [
       { label: 'Product & Business Sense', value: 9.9 },
       { label: 'Communication & Impact', value: 7.0 },
-      { label: 'Quality & Scalability', value: 6.5 },
+      { label: 'Quality & Scalability', value: 7.9 },
       { label: 'Velocity & Focus', value: 6.0 },
       { label: 'AI Fluency', value: 8.5 },
     ],
