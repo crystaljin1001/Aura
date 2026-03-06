@@ -190,7 +190,7 @@ export function DraftCard({ project }: DraftCardProps) {
               onChange={(e) =>
                 setEditValues({ ...editValues, title: e.target.value })
               }
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
             />
             <div className="flex gap-2">
               <button
@@ -239,7 +239,7 @@ export function DraftCard({ project }: DraftCardProps) {
               }
               maxLength={120}
               rows={2}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
             />
             <div className="flex items-center justify-between">
               <span className="text-xs text-gray-500">
@@ -299,7 +299,7 @@ export function DraftCard({ project }: DraftCardProps) {
                         [`${metric.id}-title`]: e.target.value,
                       })
                     }
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                   />
                   <textarea
                     placeholder="Metric description"
@@ -311,7 +311,7 @@ export function DraftCard({ project }: DraftCardProps) {
                       })
                     }
                     rows={2}
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                   />
                   <input
                     type="text"
@@ -323,7 +323,7 @@ export function DraftCard({ project }: DraftCardProps) {
                         [`${metric.id}-value`]: e.target.value,
                       })
                     }
-                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
+                    className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder:text-gray-400 focus:border-purple-500 focus:outline-none focus:ring-1 focus:ring-purple-500"
                   />
                   <div className="flex gap-2">
                     <button
