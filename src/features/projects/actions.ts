@@ -246,7 +246,72 @@ export async function deleteProject(projectId: string) {
     throw new Error('Unauthorized')
   }
 
-  // Delete repository (cascade will handle related records)
+  // First, fetch the repository info to get the repository_url
+  const { data: repo, error: fetchError } = await supabase
+    .from('user_repositories')
+    .select('repo_owner, repo_name')
+    .eq('id', projectId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !repo) {
+    console.error('Error fetching repository:', fetchError)
+    throw new Error('Project not found')
+  }
+
+  const repositoryUrl = `${repo.repo_owner}/${repo.repo_name}`
+
+  // Delete all related records manually (since there are no foreign key constraints)
+  // Delete narrative scripts
+  await supabase
+    .from('narrative_scripts')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('repository_url', repositoryUrl)
+
+  // Delete project videos
+  await supabase
+    .from('project_videos')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('repository_url', repositoryUrl)
+
+  // Delete project domains
+  await supabase
+    .from('project_domains')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('repository_url', repositoryUrl)
+
+  // Delete technical journey
+  await supabase
+    .from('project_technical_journey')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('repository_url', repositoryUrl)
+
+  // Delete impact cache (uses repo_full_name instead of repository_url)
+  await supabase
+    .from('impact_cache')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('repo_full_name', repositoryUrl)
+
+  // Delete pulse metrics cache
+  await supabase
+    .from('pulse_metrics_cache')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('repo_full_name', repositoryUrl)
+
+  // Delete engineering rigor cache
+  await supabase
+    .from('engineering_rigor_cache')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('repo_full_name', repositoryUrl)
+
+  // Finally, delete the repository itself
   const { error } = await supabase
     .from('user_repositories')
     .delete()
