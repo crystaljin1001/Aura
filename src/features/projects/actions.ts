@@ -837,7 +837,7 @@ export async function updateDraftMetric(
 /**
  * Generate and save architecture diagram for a repository
  */
-export async function generateAndSaveArchitectureDiagram(repositoryUrl: string) {
+export async function generateAndSaveArchitectureDiagram(repositoryUrl: string, userInstruction?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -896,7 +896,8 @@ export async function generateAndSaveArchitectureDiagram(repositoryUrl: string) 
       description,
       readmeContent || '',
       undefined,
-      githubToken || undefined
+      githubToken || undefined,
+      userInstruction
     )
 
     if (!result.success || !result.data) {

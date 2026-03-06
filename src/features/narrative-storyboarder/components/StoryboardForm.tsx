@@ -35,6 +35,7 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
   const [architectureDiagram, setArchitectureDiagram] = useState<{ mermaidCode: string; type: string } | null>(null);
   const [isGeneratingDiagram, setIsGeneratingDiagram] = useState(false);
   const [diagramError, setDiagramError] = useState<string | null>(null);
+  const [diagramInstruction, setDiagramInstruction] = useState('');
 
   // Load user's repositories on mount
   useEffect(() => {
@@ -123,10 +124,11 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
     setDiagramError(null);
 
     try {
-      const result = await generateAndSaveArchitectureDiagram(repoUrl);
+      const result = await generateAndSaveArchitectureDiagram(repoUrl, diagramInstruction || undefined);
 
       if (result.success && result.data) {
         setArchitectureDiagram(result.data);
+        setDiagramInstruction(''); // Clear instruction after successful generation
       } else {
         setDiagramError(result.error || 'Failed to generate diagram');
       }
@@ -193,14 +195,34 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
           {architectureDiagram && (
             <div className="space-y-4">
               <MermaidPreview mermaidCode={architectureDiagram.mermaidCode} />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleGenerateDiagram}
-                  disabled={isGeneratingDiagram}
-                  className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50"
-                >
-                  🔄 Regenerate
-                </button>
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={diagramInstruction}
+                    onChange={(e) => setDiagramInstruction(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !isGeneratingDiagram) {
+                        handleGenerateDiagram();
+                      }
+                    }}
+                    placeholder="Missing something? Tell AI to update it..."
+                    className="flex-1 px-4 py-2 text-sm bg-gray-800 border border-gray-600 text-gray-100 placeholder:text-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    disabled={isGeneratingDiagram}
+                  />
+                  <button
+                    onClick={handleGenerateDiagram}
+                    disabled={isGeneratingDiagram}
+                    className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
+                  >
+                    🔄 Regenerate
+                  </button>
+                </div>
+                {diagramInstruction && (
+                  <p className="text-xs text-muted-foreground">
+                    💡 Tip: Press Enter or click Regenerate to update the diagram
+                  </p>
+                )}
               </div>
             </div>
           )}

@@ -212,7 +212,8 @@ export async function generateArchitectureDiagram(
   description: string,
   readmeContent: string,
   techStack?: string[],
-  githubToken?: string
+  githubToken?: string,
+  userInstruction?: string
 ): Promise<ApiResponse<ArchitectureDiagram>> {
   try {
     // Authenticate user
@@ -239,7 +240,7 @@ export async function generateArchitectureDiagram(
     }
 
     // Create enhanced user prompt with rich context
-    const userPrompt = `Project: ${projectName}
+    let userPrompt = `Project: ${projectName}
 
 Description: ${description}
 
@@ -267,6 +268,18 @@ Based on ALL the context above (especially FILE STRUCTURE and TECH STACK), creat
 4. External services (databases, APIs, cloud providers)
 
 Be specific using the actual tech stack detected, not generic labels.`
+
+    // Append user instruction if provided
+    if (userInstruction) {
+      userPrompt += `
+
+---
+
+**IMPORTANT USER INSTRUCTION:**
+${userInstruction}
+
+Please update the diagram based on this specific request while maintaining accuracy to the actual tech stack and file structure.`
+    }
 
     // Call OpenAI
     const openai = getOpenAIClient()
