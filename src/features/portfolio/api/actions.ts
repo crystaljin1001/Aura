@@ -72,6 +72,8 @@ You will receive:
 - Keep it focused (6-12 nodes maximum)
 - Show data flow and key integrations
 - Use clear, specific labels (not generic "Backend" but "Next.js Server Actions" if that's what's used)
+- **IMPORTANT: Keep all node labels SHORT (max 15 characters)** - Use abbreviations if needed (e.g., "Auth" not "Authentication", "Next.js" not "Next.js Frontend")
+- **IMPORTANT: Keep edge labels VERY SHORT (max 10 characters)** - Use concise phrases (e.g., "API" not "API Calls", "Data" not "Data Fetch")
 - Make it readable and professional
 
 **FORMAT:**

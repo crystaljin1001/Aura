@@ -17,7 +17,7 @@ interface MermaidPreviewProps {
 
 export function MermaidPreview({ mermaidCode, className = '' }: MermaidPreviewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0.7); // Start smaller for modal view
+  const [scale, setScale] = useState(1.0); // Start at 100% for better text visibility
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
@@ -37,8 +37,14 @@ export function MermaidPreview({ mermaidCode, className = '' }: MermaidPreviewPr
         secondBkg: '#334155',
         tertiaryBkg: '#475569',
         darkMode: true,
+        fontSize: '14px',
       },
-      fontFamily: 'ui-monospace, monospace',
+      fontFamily: 'ui-sans-serif, system-ui, sans-serif',
+      flowchart: {
+        useMaxWidth: true,
+        htmlLabels: true,
+        curve: 'basis',
+      },
     });
 
     // Render diagram
@@ -127,8 +133,9 @@ export function MermaidPreview({ mermaidCode, className = '' }: MermaidPreviewPr
         style={{
           transform: `scale(${scale})`,
           transformOrigin: 'top left',
-          minHeight: '300px',
-          maxHeight: '500px',
+          minHeight: '400px',
+          maxHeight: '600px',
+          width: '100%',
         }}
       />
     </div>
