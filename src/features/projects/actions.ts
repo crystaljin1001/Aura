@@ -88,9 +88,10 @@ export async function getUserProjectsWithStatus(): Promise<Project[]> {
 
     // Parse repo data from JSONB
     const repoData = impact?.repo_data as Record<string, unknown> | undefined
-    const description = repoData?.description as string | undefined
+    const description = (repoData?.tldr as string | undefined) || (repoData?.description as string | undefined)
     const language = repoData?.language as string | undefined
     const readmeLength = repoData?.readmeLength as number | undefined
+    const approvedTitle = repoData?.title as string | undefined
 
     // Use status from database if it's 'analyzing' or 'draft', otherwise calculate
     let status: ProjectStatus = repo.status || 'new'
@@ -150,16 +151,16 @@ export async function getUserProjectsWithStatus(): Promise<Project[]> {
 
     return {
       id: repo.id,
-      name: repo.repo_name,
+      name: approvedTitle || repo.repo_name,
       repository: repoUrl,
-      description: undefined, // Not stored in user_repositories table
+      description: description,
       status,
       hasScript,
       hasVideo,
       hasDomain,
       stars: 0, // Will be fetched from impact cache
       forks: 0, // Will be fetched from impact cache
-      language: undefined, // Will be fetched from impact cache
+      language: language,
       videoUrl: video?.video_url,
       videoThumbnail: video?.thumbnail_url,
       domainUrl: domain?.domain,
@@ -524,7 +525,80 @@ export async function getProjectScripts(repositoryUrl: string) {
 }
 
 /**
+ * Maps draft metric type to impact metric type
+ */
+function mapDraftMetricType(draftType: 'impact' | 'technical' | 'business'): 'issues_resolved' | 'performance' | 'users' | 'quality' | 'features' {
+  // Map based on common patterns
+  switch (draftType) {
+    case 'impact':
+      return 'users'
+    case 'technical':
+      return 'performance'
+    case 'business':
+      return 'features'
+    default:
+      return 'quality'
+  }
+}
+
+/**
+ * Extracts numeric value from string (e.g., "60% reduction" -> 60, "10K+ users" -> 10000)
+ */
+function extractNumericValue(valueString: string): number {
+  // Remove common formatting
+  const cleaned = valueString.replace(/,/g, '').toLowerCase()
+
+  // Try to extract percentage
+  const percentMatch = cleaned.match(/(\d+\.?\d*)%/)
+  if (percentMatch) {
+    return parseFloat(percentMatch[1])
+  }
+
+  // Try to extract K (thousands)
+  const kMatch = cleaned.match(/(\d+\.?\d*)k/)
+  if (kMatch) {
+    return parseFloat(kMatch[1]) * 1000
+  }
+
+  // Try to extract M (millions)
+  const mMatch = cleaned.match(/(\d+\.?\d*)m/)
+  if (mMatch) {
+    return parseFloat(mMatch[1]) * 1000000
+  }
+
+  // Try to extract any number
+  const numberMatch = cleaned.match(/(\d+\.?\d*)/)
+  if (numberMatch) {
+    return parseFloat(numberMatch[1])
+  }
+
+  // Default to 1 if no number found
+  return 1
+}
+
+/**
+ * Gets icon for metric type
+ */
+function getMetricIcon(type: 'issues_resolved' | 'performance' | 'users' | 'quality' | 'features'): string {
+  switch (type) {
+    case 'issues_resolved':
+      return '🐛'
+    case 'performance':
+      return '⚡'
+    case 'users':
+      return '👥'
+    case 'quality':
+      return '✨'
+    case 'features':
+      return '🚀'
+    default:
+      return '📊'
+  }
+}
+
+/**
  * Approve draft content and transition to 'new' status
+ * Also populates impact_cache with approved metrics
  */
 export async function approveDraft(
   repoId: string,
@@ -537,22 +611,79 @@ export async function approveDraft(
     throw new Error('Unauthorized')
   }
 
-  // Get current draft data
+  // Get current draft data and repository info
   const { data: repo, error: fetchError } = await supabase
     .from('user_repositories')
-    .select('draft_data')
+    .select('draft_data, repo_owner, repo_name')
     .eq('id', repoId)
     .eq('user_id', user.id)
     .single()
 
-  if (fetchError || !repo) {
-    throw new Error('Repository not found')
+  if (fetchError || !repo || !repo.draft_data) {
+    throw new Error('Repository not found or no draft data')
   }
+
+  const repoFullName = `${repo.repo_owner}/${repo.repo_name}`
 
   // Update draft data with user approval
   const updatedDraftData = {
     ...repo.draft_data,
     userApproved: approvedData
+  }
+
+  // Extract selected metrics
+  const selectedMetrics = repo.draft_data.metrics.filter(
+    (_: unknown, index: number) => approvedData.metrics[index]
+  )
+
+  // Convert draft metrics to impact metrics format
+  const impactMetrics = selectedMetrics.map((metric: {
+    id: string;
+    type: 'impact' | 'technical' | 'business';
+    title: string;
+    description: string;
+    value: string;
+    confidence: string;
+    source: string;
+  }) => {
+    const mappedType = mapDraftMetricType(metric.type)
+    return {
+      id: metric.id,
+      type: mappedType,
+      title: metric.title,
+      description: metric.description,
+      value: extractNumericValue(metric.value),
+      icon: getMetricIcon(mappedType),
+      trend: 'up' as const,
+      source: metric.source,
+      confidence: metric.confidence,
+    }
+  })
+
+  // Prepare repo_data with title and tldr
+  const repoData = {
+    title: repo.draft_data.title,
+    tldr: repo.draft_data.tldr,
+    approvedAt: new Date().toISOString(),
+  }
+
+  // Upsert into impact_cache
+  const { error: cacheError } = await supabase
+    .from('impact_cache')
+    .upsert({
+      user_id: user.id,
+      repo_full_name: repoFullName,
+      repo_data: repoData,
+      impact_metrics: impactMetrics,
+      cached_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+    }, {
+      onConflict: 'user_id,repo_full_name'
+    })
+
+  if (cacheError) {
+    console.error('Error updating impact cache:', cacheError)
+    // Don't fail the whole operation, just log the error
   }
 
   // Update repository status to 'new' and save approval
