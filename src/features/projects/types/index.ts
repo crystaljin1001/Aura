@@ -1,4 +1,26 @@
-export type ProjectStatus = 'new' | 'script_ready' | 'video_ready' | 'deployed'
+export type ProjectStatus = 'analyzing' | 'draft' | 'new' | 'script_ready' | 'video_ready' | 'deployed'
+
+export interface DraftMetric {
+  id: string
+  type: 'impact' | 'technical' | 'business'
+  title: string
+  description: string
+  value: string
+  confidence: 'high' | 'medium' | 'low'
+  source: string
+}
+
+export interface DraftData {
+  title: string
+  tldr: string
+  metrics: DraftMetric[]
+  generatedAt: string
+  userApproved?: {
+    title: boolean
+    tldr: boolean
+    metrics: boolean[]
+  }
+}
 
 export interface Project {
   id: string
@@ -28,6 +50,7 @@ export interface Project {
     percentage: number
     category: 'getting-started' | 'in-progress' | 'complete'
   }
+  draftData?: DraftData
   createdAt?: string
   updatedAt?: string
 }

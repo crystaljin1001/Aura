@@ -4,7 +4,6 @@ import { useState, useTransition } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ProBadge } from '@/components/ui/pro-badge'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -19,12 +18,25 @@ import { VideoUploadModal } from './VideoUploadModal'
 import { ViewScriptModal } from './ViewScriptModal'
 import { EditScriptTextModal } from './EditScriptTextModal'
 import { CompletnessBadge } from '@/features/portfolio/components/CompletnessBadge'
+import { AnalyzingCard } from './AnalyzingCard'
+import { DraftCard } from './DraftCard'
 
 interface ProjectCardProps {
   project: Project
 }
 
 export function ProjectCard({ project }: ProjectCardProps) {
+  // Show AnalyzingCard for 'analyzing' status
+  if (project.status === 'analyzing') {
+    return <AnalyzingCard project={project} />
+  }
+
+  // Show DraftCard for 'draft' status
+  if (project.status === 'draft') {
+    return <DraftCard project={project} />
+  }
+
+  // Continue with normal ProjectCard for other statuses
   const [showScriptModal, setShowScriptModal] = useState(false)
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [showViewScriptModal, setShowViewScriptModal] = useState(false)
@@ -119,11 +131,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
               label="Video"
               completed={project.hasVideo}
             />
-            <StatusIndicator
-              icon="🌐"
-              label="Domain"
-              completed={project.hasDomain}
-            />
           </div>
 
           {/* Primary CTA */}
@@ -131,10 +138,6 @@ export function ProjectCard({ project }: ProjectCardProps) {
             project={project}
             onConvertREADME={() => setShowScriptModal(true)}
             onRecordVideo={() => setShowVideoModal(true)}
-            onDeployDomain={() => {
-              // TODO: Open domain purchase modal
-              alert('Domain purchase coming soon!')
-            }}
           />
 
           {/* Secondary Actions */}
@@ -234,15 +237,14 @@ function PrimaryCTAButton({
   project,
   onConvertREADME,
   onRecordVideo,
-  onDeployDomain,
 }: {
   project: Project
   onConvertREADME: () => void
   onRecordVideo: () => void
-  onDeployDomain: () => void
 }) {
   switch (project.status) {
     case 'new':
+    case 'draft': // Draft status is handled by DraftCard, but include here for completeness
       return (
         <Button
           size="lg"
@@ -265,28 +267,30 @@ function PrimaryCTAButton({
       )
 
     case 'video_ready':
-      return (
-        <Button
-          size="lg"
-          onClick={onDeployDomain}
-          className="w-full bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 h-12 text-white"
-        >
-          <span className="flex items-center gap-2">
-            🌐 Deploy to Domain
-            <ProBadge variant="small" />
-          </span>
-        </Button>
-      )
-
     case 'deployed':
       return (
+        <div className="w-full h-12 flex items-center justify-center text-sm text-green-400">
+          ✅ Project Complete
+        </div>
+      )
+
+    case 'analyzing':
+      // Analyzing status is handled by AnalyzingCard, but include here for completeness
+      return (
+        <div className="w-full h-12 flex items-center justify-center text-sm text-blue-400">
+          🔄 Analyzing...
+        </div>
+      )
+
+    default:
+      // Fallback for any future status values
+      return (
         <Button
           size="lg"
-          variant="outline"
-          onClick={() => window.open(`https://${project.domainUrl}`, '_blank')}
-          className="w-full h-12"
+          onClick={onConvertREADME}
+          className="w-full bg-green-600 hover:bg-green-700 h-12"
         >
-          👁️ View Live Portfolio
+          ✨ Convert README
         </Button>
       )
   }

@@ -12,6 +12,7 @@ export function AddProjectCard() {
   const [isAdding, setIsAdding] = useState(false)
   const [repoUrl, setRepoUrl] = useState('')
   const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
   const [isPending, startTransition] = useTransition()
 
   if (!isAdding) {
@@ -38,6 +39,7 @@ export function AddProjectCard() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError('')
+    setSuccessMessage('')
 
     if (!repoUrl.trim()) {
       setError('Please enter a repository URL')
@@ -47,12 +49,28 @@ export function AddProjectCard() {
     startTransition(async () => {
       try {
         await addRepository(repoUrl)
-        setIsAdding(false)
+        setSuccessMessage('Repository added! AI is analyzing...')
         setRepoUrl('')
-        // Refresh the dashboard to show the new project
-        router.refresh()
+
+        // Wait a moment to show success message, then close and refresh
+        setTimeout(() => {
+          setIsAdding(false)
+          setSuccessMessage('')
+          router.refresh()
+        }, 1500)
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to add repository')
+        // Provide specific error messages
+        const message = err instanceof Error ? err.message : 'Failed to add repository'
+
+        if (message.includes('already added')) {
+          setError('This repository is already in your portfolio')
+        } else if (message.includes('Maximum 10')) {
+          setError('You\'ve reached the maximum of 10 repositories. Delete one to add more.')
+        } else if (message.includes('Invalid')) {
+          setError('Invalid repository URL. Use format: owner/repo or full GitHub URL')
+        } else {
+          setError(message)
+        }
       }
     })
   }
@@ -61,7 +79,12 @@ export function AddProjectCard() {
     <Card>
       <CardContent className="p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
-          <h3 className="text-lg font-semibold mb-4">Add GitHub Repository</h3>
+          <div>
+            <h3 className="text-lg font-semibold">Add GitHub Repository</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              AI will analyze your repository and suggest content automatically
+            </p>
+          </div>
 
           <div>
             <Input
@@ -71,9 +94,16 @@ export function AddProjectCard() {
               onChange={(e) => setRepoUrl(e.target.value)}
               disabled={isPending}
               className="mb-2"
+              autoFocus
             />
             {error && (
               <p className="text-sm text-red-500">{error}</p>
+            )}
+            {successMessage && (
+              <div className="flex items-center gap-2 text-sm text-green-600">
+                <span className="animate-pulse">✓</span>
+                <span>{successMessage}</span>
+              </div>
             )}
           </div>
 

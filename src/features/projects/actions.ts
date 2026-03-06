@@ -92,13 +92,16 @@ export async function getUserProjectsWithStatus(): Promise<Project[]> {
     const language = repoData?.language as string | undefined
     const readmeLength = repoData?.readmeLength as number | undefined
 
-    let status: ProjectStatus = 'new'
-    if (hasDomain) {
-      status = 'deployed'
-    } else if (hasVideo) {
-      status = 'video_ready'
-    } else if (hasScript) {
-      status = 'script_ready'
+    // Use status from database if it's 'analyzing' or 'draft', otherwise calculate
+    let status: ProjectStatus = repo.status || 'new'
+    if (status !== 'analyzing' && status !== 'draft') {
+      if (hasDomain) {
+        status = 'deployed'
+      } else if (hasVideo) {
+        status = 'video_ready'
+      } else if (hasScript) {
+        status = 'script_ready'
+      }
     }
 
     // Parse impact metrics
@@ -162,6 +165,7 @@ export async function getUserProjectsWithStatus(): Promise<Project[]> {
       domainUrl: domain?.domain,
       impactMetrics,
       completeness: completenessStats,
+      draftData: repo.draft_data || undefined,
       createdAt: repo.added_at,
       updatedAt: repo.added_at
     }
@@ -221,18 +225,29 @@ export async function addRepository(repoUrl: string) {
     throw new Error('Maximum 10 repositories allowed')
   }
 
-  // Insert repository
-  const { error } = await supabase
+  // Insert repository with analyzing status
+  const { data: insertedRepo, error } = await supabase
     .from('user_repositories')
     .insert({
       user_id: user.id,
       repo_owner: owner,
-      repo_name: repo
+      repo_name: repo,
+      status: 'analyzing'
     })
+    .select()
+    .single()
 
   if (error) {
     console.error('Error adding repository:', error)
     throw new Error('Failed to add repository')
+  }
+
+  // Trigger AI analysis asynchronously (don't await)
+  if (insertedRepo) {
+    const { analyzeRepositoryDraft } = await import('./api/draft-analyzer')
+    analyzeRepositoryDraft(insertedRepo.id, owner, repo).catch((err) => {
+      console.error('AI analysis failed:', err)
+    })
   }
 
   revalidatePath('/dashboard')
@@ -506,4 +521,184 @@ export async function getProjectScripts(repositoryUrl: string) {
   }
 
   return scripts || []
+}
+
+/**
+ * Approve draft content and transition to 'new' status
+ */
+export async function approveDraft(
+  repoId: string,
+  approvedData: { title: boolean; tldr: boolean; metrics: boolean[] }
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  // Get current draft data
+  const { data: repo, error: fetchError } = await supabase
+    .from('user_repositories')
+    .select('draft_data')
+    .eq('id', repoId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !repo) {
+    throw new Error('Repository not found')
+  }
+
+  // Update draft data with user approval
+  const updatedDraftData = {
+    ...repo.draft_data,
+    userApproved: approvedData
+  }
+
+  // Update repository status to 'new' and save approval
+  const { error } = await supabase
+    .from('user_repositories')
+    .update({
+      status: 'new',
+      draft_data: updatedDraftData
+    })
+    .eq('id', repoId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Error approving draft:', error)
+    throw new Error('Failed to approve draft')
+  }
+
+  revalidatePath('/dashboard')
+}
+
+/**
+ * Discard draft content and reset to 'new' status
+ */
+export async function discardDraft(repoId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  const { error } = await supabase
+    .from('user_repositories')
+    .update({
+      status: 'new',
+      draft_data: null
+    })
+    .eq('id', repoId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Error discarding draft:', error)
+    throw new Error('Failed to discard draft')
+  }
+
+  revalidatePath('/dashboard')
+}
+
+/**
+ * Update a specific field in draft data
+ */
+export async function updateDraftField(
+  repoId: string,
+  field: 'title' | 'tldr',
+  value: string
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  // Get current draft data
+  const { data: repo, error: fetchError } = await supabase
+    .from('user_repositories')
+    .select('draft_data')
+    .eq('id', repoId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !repo || !repo.draft_data) {
+    throw new Error('Draft data not found')
+  }
+
+  // Update the specific field
+  const updatedDraftData = {
+    ...repo.draft_data,
+    [field]: value
+  }
+
+  const { error } = await supabase
+    .from('user_repositories')
+    .update({
+      draft_data: updatedDraftData
+    })
+    .eq('id', repoId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Error updating draft field:', error)
+    throw new Error('Failed to update draft')
+  }
+
+  revalidatePath('/dashboard')
+}
+
+/**
+ * Update a specific metric in draft data
+ */
+export async function updateDraftMetric(
+  repoId: string,
+  metricId: string,
+  updates: Partial<{ title: string; description: string; value: string }>
+) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  // Get current draft data
+  const { data: repo, error: fetchError } = await supabase
+    .from('user_repositories')
+    .select('draft_data')
+    .eq('id', repoId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !repo || !repo.draft_data) {
+    throw new Error('Draft data not found')
+  }
+
+  // Update the specific metric
+  const updatedMetrics = repo.draft_data.metrics.map((metric: { id: string }) =>
+    metric.id === metricId ? { ...metric, ...updates } : metric
+  )
+
+  const updatedDraftData = {
+    ...repo.draft_data,
+    metrics: updatedMetrics
+  }
+
+  const { error } = await supabase
+    .from('user_repositories')
+    .update({
+      draft_data: updatedDraftData
+    })
+    .eq('id', repoId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Error updating draft metric:', error)
+    throw new Error('Failed to update metric')
+  }
+
+  revalidatePath('/dashboard')
 }
