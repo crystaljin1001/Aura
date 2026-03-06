@@ -833,3 +833,135 @@ export async function updateDraftMetric(
 
   revalidatePath('/dashboard')
 }
+
+/**
+ * Generate and save architecture diagram for a repository
+ */
+export async function generateAndSaveArchitectureDiagram(repositoryUrl: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  try {
+    // Get repository info
+    const [owner, repo] = repositoryUrl.split('/')
+    const { data: repoData } = await supabase
+      .from('user_repositories')
+      .select('repo_owner, repo_name, draft_data')
+      .eq('user_id', user.id)
+      .eq('repo_owner', owner)
+      .eq('repo_name', repo)
+      .single()
+
+    if (!repoData) {
+      throw new Error('Repository not found')
+    }
+
+    // Get GitHub token
+    let githubToken: string | null = null
+    const { data: tokenData } = await supabase
+      .from('github_tokens')
+      .select('encrypted_token, encryption_iv')
+      .eq('user_id', user.id)
+      .single()
+
+    if (tokenData?.encrypted_token && tokenData?.encryption_iv) {
+      const { decryptToken } = await import('@/lib/encryption/crypto')
+      try {
+        githubToken = await decryptToken({
+          encrypted: tokenData.encrypted_token,
+          iv: tokenData.encryption_iv,
+        })
+      } catch (error) {
+        console.error('Failed to decrypt GitHub token:', error)
+      }
+    }
+
+    // Fetch README
+    const { fetchGitHubReadme } = await import('@/features/portfolio/api/github-readme')
+    const readmeContent = await fetchGitHubReadme(owner, repo, githubToken || undefined)
+
+    // Get title and description from draft data if available
+    const draftData = repoData.draft_data as { title?: string; tldr?: string } | null
+    const projectTitle = draftData?.title || `${owner}/${repo}`
+    const description = draftData?.tldr || `${repo} architecture`
+
+    // Generate diagram using existing portfolio API
+    const { generateArchitectureDiagram } = await import('@/features/portfolio/api/actions')
+    const result = await generateArchitectureDiagram(
+      repositoryUrl,
+      description,
+      readmeContent || '',
+      undefined,
+      githubToken || undefined
+    )
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'Failed to generate diagram')
+    }
+
+    const diagram = result.data
+
+    // Save to database
+    const { error: saveError } = await supabase
+      .from('architecture_diagrams')
+      .upsert({
+        user_id: user.id,
+        repository_url: repositoryUrl,
+        mermaid_code: diagram.mermaidCode,
+        diagram_type: diagram.type,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: 'user_id,repository_url'
+      })
+
+    if (saveError) {
+      console.error('Error saving diagram:', saveError)
+      throw new Error('Failed to save diagram')
+    }
+
+    revalidatePath('/dashboard')
+
+    return {
+      success: true,
+      data: diagram,
+    }
+  } catch (error) {
+    console.error('Error generating architecture diagram:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to generate diagram',
+    }
+  }
+}
+
+/**
+ * Get saved architecture diagram for a repository
+ */
+export async function getArchitectureDiagram(repositoryUrl: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  const { data, error } = await supabase
+    .from('architecture_diagrams')
+    .select('*')
+    .eq('user_id', user.id)
+    .eq('repository_url', repositoryUrl)
+    .single()
+
+  if (error || !data) {
+    return null
+  }
+
+  return {
+    mermaidCode: data.mermaid_code,
+    type: data.diagram_type as 'flowchart' | 'sequence' | 'class' | 'architecture',
+  }
+}

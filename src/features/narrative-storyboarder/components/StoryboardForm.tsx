@@ -9,7 +9,9 @@ import { useState, useEffect } from 'react';
 import { generateScript } from '../api/actions';
 import { fetchReadmeFromGitHub } from '../api/github-actions';
 import { getUserRepositories } from '@/features/impact-engine/api/repository-actions';
+import { generateAndSaveArchitectureDiagram, getArchitectureDiagram } from '@/features/projects/actions';
 import { ScriptDisplay } from './ScriptDisplay';
+import { MermaidPreview } from '@/components/ui/mermaid-preview';
 import type { NarrativeScript, ScriptType } from '../types';
 import type { RepoIdentifier } from '@/lib/validations/impact-engine';
 
@@ -30,6 +32,9 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
   const [error, setError] = useState<string | null>(null);
   const [fetchedFrom, setFetchedFrom] = useState<string | null>(null);
   const [showReadmeEditor, setShowReadmeEditor] = useState(false);
+  const [architectureDiagram, setArchitectureDiagram] = useState<{ mermaidCode: string; type: string } | null>(null);
+  const [isGeneratingDiagram, setIsGeneratingDiagram] = useState(false);
+  const [diagramError, setDiagramError] = useState<string | null>(null);
 
   // Load user's repositories on mount
   useEffect(() => {
@@ -106,13 +111,101 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
   const handleReset = () => {
     setGeneratedScript(null);
     setError(null);
+    setArchitectureDiagram(null);
+    setDiagramError(null);
   };
+
+  const handleGenerateDiagram = async () => {
+    if (!selectedRepo && !preSelectedRepo) return;
+
+    const repoUrl = selectedRepo || preSelectedRepo || '';
+    setIsGeneratingDiagram(true);
+    setDiagramError(null);
+
+    try {
+      const result = await generateAndSaveArchitectureDiagram(repoUrl);
+
+      if (result.success && result.data) {
+        setArchitectureDiagram(result.data);
+      } else {
+        setDiagramError(result.error || 'Failed to generate diagram');
+      }
+    } catch (err) {
+      setDiagramError(err instanceof Error ? err.message : 'An error occurred');
+    } finally {
+      setIsGeneratingDiagram(false);
+    }
+  };
+
+  // Check for existing diagram when script is generated
+  useEffect(() => {
+    if (generatedScript && (selectedRepo || preSelectedRepo)) {
+      const repoUrl = selectedRepo || preSelectedRepo || '';
+      getArchitectureDiagram(repoUrl).then((diagram) => {
+        if (diagram) {
+          setArchitectureDiagram(diagram);
+        }
+      });
+    }
+  }, [generatedScript, selectedRepo, preSelectedRepo]);
 
   // If script is generated, show it
   if (generatedScript) {
     return (
       <div>
         <ScriptDisplay script={generatedScript} projectName={projectName} />
+
+        {/* Architecture Diagram Section */}
+        <div className="mt-8 border-t border-gray-700 pt-8">
+          <h3 className="text-xl font-semibold text-foreground mb-4 flex items-center gap-2">
+            <span>📊</span>
+            Architecture Diagram
+            <span className="text-sm font-normal text-muted-foreground">(Optional - for video reference)</span>
+          </h3>
+
+          {!architectureDiagram && !isGeneratingDiagram && (
+            <div className="rounded-lg border border-gray-700 bg-gray-900/30 p-6">
+              <p className="text-sm text-muted-foreground mb-4">
+                Generate an AI-powered architecture diagram to help visualize your project structure during video recording.
+              </p>
+              <button
+                onClick={handleGenerateDiagram}
+                disabled={isGeneratingDiagram}
+                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ✨ Generate Architecture Diagram
+              </button>
+              {diagramError && (
+                <p className="mt-3 text-sm text-red-400">{diagramError}</p>
+              )}
+            </div>
+          )}
+
+          {isGeneratingDiagram && (
+            <div className="rounded-lg border border-gray-700 bg-gray-900/30 p-8 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-4"></div>
+              <p className="text-sm text-muted-foreground">
+                Analyzing repository structure and generating diagram...
+              </p>
+            </div>
+          )}
+
+          {architectureDiagram && (
+            <div className="space-y-4">
+              <MermaidPreview mermaidCode={architectureDiagram.mermaidCode} />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleGenerateDiagram}
+                  disabled={isGeneratingDiagram}
+                  className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                >
+                  🔄 Regenerate
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         <div className="mt-8 flex gap-4 justify-center">
           <button
             onClick={() => {
@@ -122,7 +215,7 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
             }}
             className="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
           >
-            Done
+            Done - Ready to Record
           </button>
           <button
             onClick={handleReset}

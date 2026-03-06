@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useTransition, useRef } from 'react'
+import { useState, useTransition, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   Dialog,
@@ -11,8 +11,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Upload, Link as LinkIcon } from 'lucide-react'
-import { saveProjectVideo, uploadProjectVideo } from '../actions'
+import { Upload, Link as LinkIcon, ChevronDown, ChevronUp } from 'lucide-react'
+import { saveProjectVideo, uploadProjectVideo, getArchitectureDiagram } from '../actions'
+import { MermaidPreview } from '@/components/ui/mermaid-preview'
 import type { Project } from '../types'
 
 interface VideoUploadModalProps {
@@ -33,6 +34,20 @@ export function VideoUploadModal({ project, isOpen, onClose }: VideoUploadModalP
   const [uploadProgress, setUploadProgress] = useState(0)
   const [error, setError] = useState('')
   const [isPending, startTransition] = useTransition()
+  const [architectureDiagram, setArchitectureDiagram] = useState<{ mermaidCode: string; type: string } | null>(null)
+  const [showDiagram, setShowDiagram] = useState(false)
+
+  // Load architecture diagram on mount
+  useEffect(() => {
+    if (isOpen) {
+      getArchitectureDiagram(project.repository).then((diagram) => {
+        if (diagram) {
+          setArchitectureDiagram(diagram)
+          setShowDiagram(true) // Auto-expand if diagram exists
+        }
+      })
+    }
+  }, [isOpen, project.repository])
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -196,6 +211,28 @@ export function VideoUploadModal({ project, isOpen, onClose }: VideoUploadModalP
                   <li>• Set YouTube videos to "Unlisted" for portfolio use</li>
                 </ul>
               </div>
+
+              {/* Architecture Diagram Reference */}
+              {architectureDiagram && (
+                <div className="border border-gray-700 rounded-lg overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowDiagram(!showDiagram)}
+                    className="w-full flex items-center justify-between p-4 bg-gray-800/30 hover:bg-gray-800/50 transition-colors"
+                  >
+                    <span className="text-sm font-medium">📊 Architecture Diagram Reference</span>
+                    {showDiagram ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                  {showDiagram && (
+                    <div className="p-4">
+                      <MermaidPreview mermaidCode={architectureDiagram.mermaidCode} className="mb-2" />
+                      <p className="text-xs text-muted-foreground">
+                        Use this diagram as reference while recording your architecture walkthrough
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Video URL Input */}
               <form onSubmit={handleSubmitUrl} className="space-y-4">
