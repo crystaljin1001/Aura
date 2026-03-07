@@ -23,10 +23,10 @@ export function ArchitectureDiagramModal({ project, isOpen, onClose }: Architect
     if (isOpen) {
       loadDiagram()
     }
-  }, [isOpen, project.repository])
+  }, [isOpen, project.id])
 
   const loadDiagram = async () => {
-    const diagram = await getArchitectureDiagram(project.repository)
+    const diagram = await getArchitectureDiagram(project.id)
     if (diagram) {
       setArchitectureDiagram(diagram)
     }
@@ -37,7 +37,7 @@ export function ArchitectureDiagramModal({ project, isOpen, onClose }: Architect
     setError(null)
 
     try {
-      const result = await generateAndSaveArchitectureDiagram(project.repository, instruction || undefined)
+      const result = await generateAndSaveArchitectureDiagram(project.id, instruction || undefined)
 
       if (result.success && result.data) {
         setArchitectureDiagram(result.data)

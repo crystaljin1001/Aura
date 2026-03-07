@@ -29,6 +29,7 @@ export function ScriptEditorModal({ project, isOpen, onClose }: ScriptEditorModa
 
         <StoryboardForm
           preSelectedRepo={project.repository}
+          projectId={project.id}
           onComplete={handleComplete}
         />
       </DialogContent>

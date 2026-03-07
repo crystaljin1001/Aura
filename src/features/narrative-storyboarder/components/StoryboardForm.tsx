@@ -17,12 +17,14 @@ import type { RepoIdentifier } from '@/lib/validations/impact-engine';
 
 interface StoryboardFormProps {
   preSelectedRepo?: string
+  projectId?: string
   onComplete?: () => void
 }
 
-export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormProps = {}) {
+export function StoryboardForm({ preSelectedRepo, projectId, onComplete }: StoryboardFormProps = {}) {
   const [repositories, setRepositories] = useState<RepoIdentifier[]>([]);
   const [selectedRepo, setSelectedRepo] = useState<string>(preSelectedRepo || '');
+  const [currentProjectId, setCurrentProjectId] = useState<string | undefined>(projectId);
   const [projectName, setProjectName] = useState('');
   const [readmeContent, setReadmeContent] = useState('');
   const [scriptType, setScriptType] = useState<ScriptType>('user_journey');
@@ -61,6 +63,30 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
       setRepositories(result.data);
     }
   };
+
+  // Fetch project ID when selectedRepo changes (if not already provided)
+  useEffect(() => {
+    async function fetchProjectId() {
+      if (!selectedRepo || projectId) return; // Skip if repo not selected or projectId already provided
+
+      const [owner, repo] = selectedRepo.split('/');
+      const { createClient } = await import('@/lib/supabase/client');
+      const supabase = createClient();
+
+      const { data } = await supabase
+        .from('user_repositories')
+        .select('id')
+        .eq('repo_owner', owner)
+        .eq('repo_name', repo)
+        .single();
+
+      if (data) {
+        setCurrentProjectId(data.id);
+      }
+    }
+
+    fetchProjectId();
+  }, [selectedRepo, projectId]);
 
   const handleFetchReadme = async () => {
     if (!selectedRepo) return;
@@ -117,14 +143,16 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
   };
 
   const handleGenerateDiagram = async () => {
-    if (!selectedRepo && !preSelectedRepo) return;
+    if (!currentProjectId) {
+      setDiagramError('Project ID not found. Please select a repository first.');
+      return;
+    }
 
-    const repoUrl = selectedRepo || preSelectedRepo || '';
     setIsGeneratingDiagram(true);
     setDiagramError(null);
 
     try {
-      const result = await generateAndSaveArchitectureDiagram(repoUrl, diagramInstruction || undefined);
+      const result = await generateAndSaveArchitectureDiagram(currentProjectId, diagramInstruction || undefined);
 
       if (result.success && result.data) {
         setArchitectureDiagram(result.data);
@@ -141,15 +169,14 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
 
   // Check for existing diagram when script is generated
   useEffect(() => {
-    if (generatedScript && (selectedRepo || preSelectedRepo)) {
-      const repoUrl = selectedRepo || preSelectedRepo || '';
-      getArchitectureDiagram(repoUrl).then((diagram) => {
+    if (generatedScript && currentProjectId) {
+      getArchitectureDiagram(currentProjectId).then((diagram) => {
         if (diagram) {
           setArchitectureDiagram(diagram);
         }
       });
     }
-  }, [generatedScript, selectedRepo, preSelectedRepo]);
+  }, [generatedScript, currentProjectId]);
 
   // If script is generated, show it
   if (generatedScript) {

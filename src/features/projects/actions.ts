@@ -835,9 +835,9 @@ export async function updateDraftMetric(
 }
 
 /**
- * Generate and save architecture diagram for a repository
+ * Generate and save architecture diagram for a project
  */
-export async function generateAndSaveArchitectureDiagram(repositoryUrl: string, userInstruction?: string) {
+export async function generateAndSaveArchitectureDiagram(projectId: string, userInstruction?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -846,19 +846,21 @@ export async function generateAndSaveArchitectureDiagram(repositoryUrl: string, 
   }
 
   try {
-    // Get repository info
-    const [owner, repo] = repositoryUrl.split('/')
-    const { data: repoData } = await supabase
+    // Get project info
+    const { data: project } = await supabase
       .from('user_repositories')
-      .select('repo_owner, repo_name, draft_data')
+      .select('id, repo_owner, repo_name, draft_data')
       .eq('user_id', user.id)
-      .eq('repo_owner', owner)
-      .eq('repo_name', repo)
+      .eq('id', projectId)
       .single()
 
-    if (!repoData) {
-      throw new Error('Repository not found')
+    if (!project) {
+      throw new Error('Project not found')
     }
+
+    const owner = project.repo_owner
+    const repo = project.repo_name
+    const repositoryUrl = `${owner}/${repo}`
 
     // Get GitHub token
     let githubToken: string | null = null
@@ -885,7 +887,7 @@ export async function generateAndSaveArchitectureDiagram(repositoryUrl: string, 
     const readmeContent = await fetchGitHubReadme(owner, repo, githubToken || undefined)
 
     // Get title and description from draft data if available
-    const draftData = repoData.draft_data as { title?: string; tldr?: string } | null
+    const draftData = project.draft_data as { title?: string; tldr?: string } | null
     const projectTitle = draftData?.title || `${owner}/${repo}`
     const description = draftData?.tldr || `${repo} architecture`
 
@@ -911,12 +913,12 @@ export async function generateAndSaveArchitectureDiagram(repositoryUrl: string, 
       .from('architecture_diagrams')
       .upsert({
         user_id: user.id,
-        repository_url: repositoryUrl,
+        project_id: projectId,
         mermaid_code: diagram.mermaidCode,
         diagram_type: diagram.type,
         updated_at: new Date().toISOString(),
       }, {
-        onConflict: 'user_id,repository_url'
+        onConflict: 'project_id'
       })
 
     if (saveError) {
@@ -940,9 +942,9 @@ export async function generateAndSaveArchitectureDiagram(repositoryUrl: string, 
 }
 
 /**
- * Get saved architecture diagram for a repository
+ * Get saved architecture diagram for a project
  */
-export async function getArchitectureDiagram(repositoryUrl: string) {
+export async function getArchitectureDiagram(projectId: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
@@ -954,7 +956,7 @@ export async function getArchitectureDiagram(repositoryUrl: string) {
     .from('architecture_diagrams')
     .select('*')
     .eq('user_id', user.id)
-    .eq('repository_url', repositoryUrl)
+    .eq('project_id', projectId)
     .single()
 
   if (error || !data) {

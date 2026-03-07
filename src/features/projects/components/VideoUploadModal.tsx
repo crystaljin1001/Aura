@@ -40,14 +40,14 @@ export function VideoUploadModal({ project, isOpen, onClose }: VideoUploadModalP
   // Load architecture diagram on mount
   useEffect(() => {
     if (isOpen) {
-      getArchitectureDiagram(project.repository).then((diagram) => {
+      getArchitectureDiagram(project.id).then((diagram) => {
         if (diagram) {
           setArchitectureDiagram(diagram)
           setShowDiagram(true) // Auto-expand if diagram exists
         }
       })
     }
-  }, [isOpen, project.repository])
+  }, [isOpen, project.id])
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
