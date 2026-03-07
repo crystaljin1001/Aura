@@ -46,6 +46,14 @@ export default async function StudioPage({ params }: StudioPageProps) {
 
   // Parse the generated_script JSONB field
   const parsedScript = scriptData?.generated_script as any
+  const scriptType = scriptData?.script_type || 'user_journey'
+
+  // Build script object based on type
+  const scriptObject = parsedScript ? {
+    ...parsedScript,
+    type: scriptType,
+    totalDuration: parsedScript.totalDuration || 165,
+  } : null
 
   return (
     <StudioMode
@@ -60,15 +68,7 @@ export default async function StudioPage({ params }: StudioPageProps) {
         completeness: null,
         draftData: project.draft_data,
       }}
-      script={parsedScript ? {
-        hook: parsedScript.hook,
-        problem: parsedScript.problem,
-        solution: parsedScript.solution,
-        impact: parsedScript.impact,
-        cta: parsedScript.cta,
-        totalDuration: parsedScript.totalDuration || 165,
-        type: scriptData.script_type || 'user_journey',
-      } : null}
+      script={scriptObject}
       diagram={diagramData ? {
         mermaidCode: diagramData.mermaid_code,
         type: diagramData.diagram_type,

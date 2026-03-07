@@ -27,14 +27,21 @@ export function StudioMode({ project, script, diagram }: StudioModeProps) {
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [showInstructions, setShowInstructions] = useState(true)
 
-  // Convert script to chapters
-  const chapters: ScriptChapter[] = script ? [
-    { title: '1. Hook', content: script.hook, duration: 15 },
-    { title: '2. Problem', content: script.problem, duration: 30 },
-    { title: '3. Solution', content: script.solution, duration: 60 },
-    { title: '4. Impact', content: script.impact, duration: 45 },
-    { title: '5. Call to Action', content: script.cta, duration: 15 },
-  ] : []
+  // Convert script to chapters based on script type
+  const chapters: ScriptChapter[] = script ? (
+    script.type === 'technical_architecture' ? [
+      { title: 'I. The Context', content: (script as any).context, duration: 50 },
+      { title: 'II. The Logic Gate', content: (script as any).logicGate, duration: 80 },
+      { title: 'III. The Execution', content: (script as any).execution, duration: 70 },
+      { title: 'IV. The Moat', content: (script as any).moat, duration: 50 },
+    ] : [
+      { title: '1. Hook', content: script.hook, duration: 15 },
+      { title: '2. Problem', content: script.problem, duration: 30 },
+      { title: '3. Solution', content: script.solution, duration: 60 },
+      { title: '4. Impact', content: script.impact, duration: 45 },
+      { title: '5. Call to Action', content: script.cta, duration: 15 },
+    ]
+  ) : []
 
   const hasScript = chapters.length > 0
   const hasDiagram = !!diagram
