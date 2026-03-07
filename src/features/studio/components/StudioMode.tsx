@@ -2,11 +2,55 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { ChevronLeft, ChevronRight, X, Video, Maximize2, Info } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, Video, Maximize2, Info, MousePointer2 } from 'lucide-react'
 import { MermaidPreview } from '@/components/ui/mermaid-preview'
 import { VideoUploadModal } from '@/features/projects/components/VideoUploadModal'
 import type { Project } from '@/features/projects/types'
 import type { NarrativeScript } from '@/features/narrative-storyboarder/types'
+
+/**
+ * Formats script content with markdown-style bold and highlighted visual cues
+ */
+function FormattedScript({ content }: { content: string }) {
+  // Split into paragraphs
+  const paragraphs = content.split('\n').filter(p => p.trim())
+
+  return (
+    <div className="space-y-5">
+      {paragraphs.map((paragraph, idx) => {
+        // Check if this is a visual cue line
+        const isVisualCue = paragraph.trim().startsWith('[VISUAL CUE:') ||
+                           paragraph.trim().startsWith('[Transition:')
+
+        if (isVisualCue) {
+          return (
+            <div key={idx} className="flex items-start gap-3 py-3 px-4 bg-yellow-900/20 border-l-4 border-yellow-400 rounded-r-lg">
+              <MousePointer2 className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+              <p className="text-lg font-semibold text-yellow-300 leading-loose">
+                {paragraph}
+              </p>
+            </div>
+          )
+        }
+
+        // Parse **bold** markdown
+        const parts = paragraph.split(/(\*\*.*?\*\*)/)
+
+        return (
+          <p key={idx} className="text-lg leading-loose text-slate-200">
+            {parts.map((part, partIdx) => {
+              if (part.startsWith('**') && part.endsWith('**')) {
+                const boldText = part.slice(2, -2)
+                return <strong key={partIdx} className="font-bold text-white">{boldText}</strong>
+              }
+              return <span key={partIdx}>{part}</span>
+            })}
+          </p>
+        )
+      })}
+    </div>
+  )
+}
 
 interface StudioModeProps {
   project: Project
@@ -137,9 +181,7 @@ export function StudioMode({ project, script, diagram }: StudioModeProps) {
                       ~{chapters[currentChapter].duration}s
                     </span>
                   </div>
-                  <p className="text-lg leading-relaxed text-slate-200 whitespace-pre-wrap">
-                    {chapters[currentChapter].content}
-                  </p>
+                  <FormattedScript content={chapters[currentChapter].content} />
                 </div>
               </div>
 

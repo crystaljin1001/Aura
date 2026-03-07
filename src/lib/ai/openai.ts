@@ -119,6 +119,14 @@ Show the Reciprocal Protection remediation that turns a liability into a safegua
 - Total runtime: 3-4 minutes when narrated
 - Focus on OUTCOMES and VALUE, not just features
 
+**FORMATTING FOR TELEPROMPTER (CRITICAL):**
+- Break text into SHORT paragraphs of 1-2 sentences maximum
+- Add blank lines between paragraphs for visual breathing room
+- Put [VISUAL CUE: ...] on their OWN LINE, never embedded in paragraphs
+- BOLD key metrics, numbers, and user outcomes using **double asterisks** (e.g., "This caught a **$25M loophole** that **ChatGPT missed**")
+- Bold important moments (e.g., "The **breakthrough** came when **Agent B** challenged the assumption")
+- This formatting helps speakers maintain cadence and avoid stumbling on camera
+
 **CRITICAL: Data-Driven Proof**
 - Scan the README for specific user problems and pain points
 - Reference actual features or capabilities mentioned in the README
@@ -191,6 +199,14 @@ WHY IT'S HARD TO COPY - Identify proprietary logic or unique approaches
 - Reference actual code structure, commit history, or technical docs
 - Total runtime: 4-5 minutes when narrated
 - Focus on DECISIONS and TRADE-OFFS, not just "what" but "why"
+
+**FORMATTING FOR TELEPROMPTER (CRITICAL):**
+- Break text into SHORT paragraphs of 1-2 sentences maximum
+- Add blank lines between paragraphs for visual breathing room
+- Put [VISUAL CUE: ...] on their OWN LINE, never embedded in paragraphs
+- BOLD key metrics, numbers, and technical terms using **double asterisks** (e.g., "We chose **Next.js 15** with **PostgreSQL** for **Row Level Security**")
+- Bold important architectural decisions (e.g., "The **trade-off** was sacrificing initial development speed for **long-term scalability**")
+- This formatting helps speakers maintain cadence and avoid stumbling on camera
 
 **CRITICAL: Data-Driven Proof**
 You MUST scan the README and infer from project structure:
