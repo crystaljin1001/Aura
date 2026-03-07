@@ -49,6 +49,26 @@ Your script MUST follow this exact flow:
    - What metrics or results matter?
    - What's the bigger vision?
 
+**TONE AND STYLE GUIDE (STRICTLY ENFORCED):**
+
+**Constraint 1: Spoken English, Not Written**
+- Use contractions: I'm, we've, here's, that's, it's
+- Write as you would speak in a casual demo video
+- Do NOT write formal documentation
+
+**Constraint 2: Ban the Fluff (ZERO TOLERANCE)**
+DO NOT use:
+- ❌ "In today's landscape"
+- ❌ "Delve into"
+- ❌ "Crucial" / "Seamlessly" / "Robust" / "Leverage"
+- ❌ "Revolutionary" / "Game-changing"
+
+START with the problem immediately. No filler.
+
+**Constraint 3: Short, Punchy Sentences**
+❌ BAD: "The solution was architected to provide comprehensive functionality..."
+✅ GOOD: "Here's how it works. You connect your GitHub. It pulls your commits."
+
 **SCRIPT GUIDELINES:**
 - Write in a conversational, confident tone
 - Keep each section crisp and focused
@@ -108,6 +128,41 @@ Show the Reciprocal Protection remediation that turns a liability into a safegua
 - Show the transformation from problem to protection
 - End with the new state: what's now possible that wasn't before?
 - Finish with future vision or next steps
+
+**TONE AND STYLE GUIDE (STRICTLY ENFORCED - THIS IS CRITICAL):**
+
+**Constraint 1: Spoken English, Not Written**
+- Use contractions: I'm, we've, here's, that's, it's, you're, can't, won't
+- Write EXACTLY as a product demo narrator would speak on Loom
+- Do NOT write an essay or marketing copy
+- Sound like you're walking a friend through the product
+
+**Constraint 2: Ban the Fluff (ZERO TOLERANCE)**
+DO NOT use these banned phrases under any circumstances:
+- ❌ "In today's fast-paced digital landscape"
+- ❌ "In today's competitive landscape"
+- ❌ "Delve into"
+- ❌ "A tapestry of"
+- ❌ "Crucial"
+- ❌ "Seamlessly"
+- ❌ "Robust"
+- ❌ "Leverage"
+- ❌ "Cutting-edge"
+- ❌ "Revolutionary"
+- ❌ "Game-changing"
+- ❌ "It's worth noting that"
+- ❌ Any phrase that sounds like LinkedIn or marketing copy
+
+START IMMEDIATELY with the user's problem. No warm-up sentences.
+
+**Constraint 3: The "Loom" Structure**
+Use short, punchy sentences. Active voice. Get to the point.
+
+❌ BAD (Marketing English):
+"Our innovative solution seamlessly integrates with your existing workflow to provide unprecedented value..."
+
+✅ GOOD (Spoken English):
+"Here's how it works. You paste in the document. The AI agents start debating. You see the issue in **real-time**."
 
 **SCRIPT GUIDELINES:**
 - Write in present tense, as if narrating a live demo
@@ -189,6 +244,48 @@ WHY IT'S HARD TO COPY - Identify proprietary logic or unique approaches
 - What would competitors need to rebuild from scratch?
 - What's in the future roadmap that deepens the moat?
 - End with: [VISUAL CUE: Return to full system view]
+
+**TONE AND STYLE GUIDE (STRICTLY ENFORCED - THIS IS CRITICAL):**
+
+**Constraint 1: Spoken English, Not Written**
+- Use contractions: I'm, we've, here's, that's, it's, you're, can't, won't
+- Write EXACTLY as a senior software engineer would speak in a casual Loom walkthrough
+- Do NOT write an essay or formal documentation
+- Sound like you're explaining to a colleague over Zoom
+
+**Constraint 2: Ban the Fluff (ZERO TOLERANCE)**
+DO NOT use these banned phrases under any circumstances:
+- ❌ "In today's fast-paced digital landscape"
+- ❌ "In today's competitive landscape"
+- ❌ "Delve into"
+- ❌ "A tapestry of"
+- ❌ "Crucial"
+- ❌ "Seamlessly"
+- ❌ "Robust"
+- ❌ "Leverage"
+- ❌ "Cutting-edge"
+- ❌ "Revolutionary"
+- ❌ "Game-changing"
+- ❌ "It's worth noting that"
+- ❌ "marked by a significant commitment"
+- ❌ Any phrase that sounds like LinkedIn or marketing copy
+
+START IMMEDIATELY with the problem and the tech. No warm-up sentences.
+
+**Constraint 3: The "Loom" Structure**
+Use short, punchy sentences. Active voice. Get to the point.
+
+❌ BAD (Essay English):
+"Aura was architected to address this architectural challenge, providing a high-signal 'Proof of Work' engine that prioritizes clarity..."
+
+✅ GOOD (Spoken English):
+"To fix this, we built Aura. It's a Proof of Work engine. It connects directly to your GitHub..."
+
+❌ BAD:
+"The implementation phase was marked by a significant commitment to quality and efficiency."
+
+✅ GOOD:
+"We spent **40 hours** on design and **200 hours** coding. Most of that time went into the caching layer."
 
 **SCRIPT GUIDELINES:**
 - Write for a technical audience (senior engineers, architects, CTOs)
