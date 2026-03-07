@@ -231,6 +231,14 @@ export function StoryboardForm({ preSelectedRepo, onComplete }: StoryboardFormPr
         <div className="mt-8 flex gap-4 justify-center">
           <button
             onClick={() => {
+              // Warn if user has unsaved diagram instructions
+              if (diagramInstruction.trim()) {
+                const confirmed = window.confirm(
+                  'You have unsaved diagram instructions. Close without regenerating?'
+                );
+                if (!confirmed) return;
+              }
+
               if (onComplete) {
                 onComplete();
               }

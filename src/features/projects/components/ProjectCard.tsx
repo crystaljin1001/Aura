@@ -17,6 +17,7 @@ import { ScriptEditorModal } from './ScriptEditorModal'
 import { VideoUploadModal } from './VideoUploadModal'
 import { ViewScriptModal } from './ViewScriptModal'
 import { EditScriptTextModal } from './EditScriptTextModal'
+import { ArchitectureDiagramModal } from './ArchitectureDiagramModal'
 import { CompletnessBadge } from '@/features/portfolio/components/CompletnessBadge'
 import { AnalyzingCard } from './AnalyzingCard'
 import { DraftCard } from './DraftCard'
@@ -41,6 +42,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [showViewScriptModal, setShowViewScriptModal] = useState(false)
   const [showEditScriptModal, setShowEditScriptModal] = useState(false)
+  const [showDiagramModal, setShowDiagramModal] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function handleDelete() {
@@ -164,6 +166,9 @@ export function ProjectCard({ project }: ProjectCardProps) {
                   <DropdownMenuItem onClick={() => setShowScriptModal(true)}>
                     🔄 Regenerate Script
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowDiagramModal(true)}>
+                    📊 Architecture Diagram
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
               )}
@@ -207,6 +212,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
         project={project}
         isOpen={showEditScriptModal}
         onClose={() => setShowEditScriptModal(false)}
+      />
+      <ArchitectureDiagramModal
+        project={project}
+        isOpen={showDiagramModal}
+        onClose={() => setShowDiagramModal(false)}
       />
     </>
   )

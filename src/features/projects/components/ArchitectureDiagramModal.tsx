@@ -1,0 +1,162 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
+import { MermaidPreview } from '@/components/ui/mermaid-preview'
+import { generateAndSaveArchitectureDiagram, getArchitectureDiagram } from '../actions'
+import type { Project } from '../types'
+
+interface ArchitectureDiagramModalProps {
+  project: Project
+  isOpen: boolean
+  onClose: () => void
+}
+
+export function ArchitectureDiagramModal({ project, isOpen, onClose }: ArchitectureDiagramModalProps) {
+  const [architectureDiagram, setArchitectureDiagram] = useState<{ mermaidCode: string; type: string } | null>(null)
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [instruction, setInstruction] = useState('')
+
+  // Load existing diagram when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      loadDiagram()
+    }
+  }, [isOpen, project.repository])
+
+  const loadDiagram = async () => {
+    const diagram = await getArchitectureDiagram(project.repository)
+    if (diagram) {
+      setArchitectureDiagram(diagram)
+    }
+  }
+
+  const handleGenerate = async () => {
+    setIsGenerating(true)
+    setError(null)
+
+    try {
+      const result = await generateAndSaveArchitectureDiagram(project.repository, instruction || undefined)
+
+      if (result.success && result.data) {
+        setArchitectureDiagram(result.data)
+        setInstruction('') // Clear instruction after successful generation
+      } else {
+        setError(result.error || 'Failed to generate diagram')
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred')
+    } finally {
+      setIsGenerating(false)
+    }
+  }
+
+  const handleClose = () => {
+    // Warn if user has unsaved instructions
+    if (instruction.trim()) {
+      const confirmed = window.confirm(
+        'You have unsaved diagram instructions. Close without regenerating?'
+      )
+      if (!confirmed) return
+    }
+
+    setInstruction('')
+    setError(null)
+    onClose()
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Architecture Diagram</DialogTitle>
+          <DialogDescription>
+            Generate or update your project&apos;s architecture diagram for video reference
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-6">
+          {/* Generation Section */}
+          {!architectureDiagram && !isGenerating && (
+            <div className="rounded-lg border border-gray-700 bg-gray-900/30 p-6">
+              <p className="text-sm text-muted-foreground mb-4">
+                Generate an AI-powered architecture diagram to help visualize your project structure during video recording.
+              </p>
+              <button
+                onClick={handleGenerate}
+                disabled={isGenerating}
+                className="px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ✨ Generate Architecture Diagram
+              </button>
+              {error && (
+                <p className="mt-3 text-sm text-red-400">{error}</p>
+              )}
+            </div>
+          )}
+
+          {/* Loading State */}
+          {isGenerating && (
+            <div className="rounded-lg border border-gray-700 bg-gray-900/30 p-8 text-center">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500 mb-4"></div>
+              <p className="text-sm text-muted-foreground">
+                Analyzing repository structure and generating diagram...
+              </p>
+            </div>
+          )}
+
+          {/* Diagram Display & Regeneration */}
+          {architectureDiagram && (
+            <div className="space-y-4">
+              <MermaidPreview mermaidCode={architectureDiagram.mermaidCode} />
+
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={instruction}
+                    onChange={(e) => setInstruction(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !isGenerating) {
+                        handleGenerate()
+                      }
+                    }}
+                    placeholder="Missing something? Tell AI to update it..."
+                    className="flex-1 px-4 py-2 text-sm bg-gray-800 border border-gray-600 text-gray-100 placeholder:text-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    disabled={isGenerating}
+                  />
+                  <button
+                    onClick={handleGenerate}
+                    disabled={isGenerating}
+                    className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
+                  >
+                    {isGenerating ? '⏳ Generating...' : '🔄 Regenerate'}
+                  </button>
+                </div>
+                {instruction && (
+                  <p className="text-xs text-muted-foreground">
+                    💡 Tip: Press Enter or click Regenerate to update the diagram
+                  </p>
+                )}
+                {error && (
+                  <p className="text-sm text-red-400">{error}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
+            <button
+              onClick={handleClose}
+              className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
