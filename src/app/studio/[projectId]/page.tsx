@@ -44,6 +44,9 @@ export default async function StudioPage({ params }: StudioPageProps) {
     .eq('user_id', user.id)
     .single()
 
+  // Parse the generated_script JSONB field
+  const parsedScript = scriptData?.generated_script as any
+
   return (
     <StudioMode
       project={{
@@ -57,13 +60,13 @@ export default async function StudioPage({ params }: StudioPageProps) {
         completeness: null,
         draftData: project.draft_data,
       }}
-      script={scriptData ? {
-        hook: scriptData.hook,
-        problem: scriptData.problem,
-        solution: scriptData.solution,
-        impact: scriptData.impact,
-        cta: scriptData.cta,
-        totalDuration: scriptData.total_duration,
+      script={parsedScript ? {
+        hook: parsedScript.hook,
+        problem: parsedScript.problem,
+        solution: parsedScript.solution,
+        impact: parsedScript.impact,
+        cta: parsedScript.cta,
+        totalDuration: parsedScript.totalDuration || 165,
         type: scriptData.script_type || 'user_journey',
       } : null}
       diagram={diagramData ? {
