@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -38,6 +39,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
   }
 
   // Continue with normal ProjectCard for other statuses
+  const router = useRouter()
   const [showScriptModal, setShowScriptModal] = useState(false)
   const [showVideoModal, setShowVideoModal] = useState(false)
   const [showViewScriptModal, setShowViewScriptModal] = useState(false)
@@ -55,6 +57,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
 
   function handleViewOnGitHub() {
     window.open(`https://github.com/${project.repository}`, '_blank')
+  }
+
+  function handleRecordVideo() {
+    // Navigate to Studio Mode instead of opening modal
+    router.push(`/studio/${project.id}`)
   }
 
   return (
@@ -139,7 +146,7 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <PrimaryCTAButton
             project={project}
             onConvertREADME={() => setShowScriptModal(true)}
-            onRecordVideo={() => setShowVideoModal(true)}
+            onRecordVideo={handleRecordVideo}
           />
 
           {/* Secondary Actions */}
@@ -157,6 +164,10 @@ export function ProjectCard({ project }: ProjectCardProps) {
             <DropdownMenuContent align="end" className="w-56">
               {project.hasScript && (
                 <>
+                  <DropdownMenuItem onClick={handleRecordVideo}>
+                    🎬 Open Studio Mode
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setShowViewScriptModal(true)}>
                     📄 View Script
                   </DropdownMenuItem>
