@@ -12,44 +12,73 @@ import type { NarrativeScript } from '@/features/narrative-storyboarder/types'
  * Formats script content with markdown-style bold and highlighted visual cues
  */
 function FormattedScript({ content }: { content: string }) {
-  // Split into paragraphs
-  const paragraphs = content.split('\n').filter(p => p.trim())
+  const elements: JSX.Element[] = []
+  let elementKey = 0
 
-  return (
-    <div className="space-y-5">
-      {paragraphs.map((paragraph, idx) => {
-        // Check if this is a visual cue line
-        const isVisualCue = paragraph.trim().startsWith('[VISUAL CUE:') ||
-                           paragraph.trim().startsWith('[Transition:')
+  // First, extract and separate visual cues from regular text
+  const segments = content.split(/(\[(?:VISUAL CUE|Transition):[^\]]+\])/)
 
-        if (isVisualCue) {
-          return (
-            <div key={idx} className="flex items-start gap-3 py-3 px-4 bg-yellow-900/20 border-l-4 border-yellow-400 rounded-r-lg">
-              <MousePointer2 className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
-              <p className="text-lg font-semibold text-yellow-300 leading-loose">
-                {paragraph}
-              </p>
-            </div>
-          )
-        }
+  segments.forEach((segment) => {
+    if (!segment.trim()) return
 
-        // Parse **bold** markdown
-        const parts = paragraph.split(/(\*\*.*?\*\*)/)
+    // Check if this segment is a visual cue
+    const isVisualCue = segment.trim().startsWith('[VISUAL CUE:') ||
+                       segment.trim().startsWith('[Transition:')
 
-        return (
-          <p key={idx} className="text-lg leading-loose text-slate-200">
-            {parts.map((part, partIdx) => {
-              if (part.startsWith('**') && part.endsWith('**')) {
-                const boldText = part.slice(2, -2)
-                return <strong key={partIdx} className="font-bold text-white">{boldText}</strong>
-              }
-              return <span key={partIdx}>{part}</span>
-            })}
+    if (isVisualCue) {
+      // Render visual cue as distinct yellow block
+      elements.push(
+        <div key={elementKey++} className="flex items-start gap-3 py-3 px-4 bg-yellow-900/20 border-l-4 border-yellow-400 rounded-r-lg my-6">
+          <MousePointer2 className="w-5 h-5 text-yellow-400 mt-0.5 flex-shrink-0" />
+          <p className="text-lg font-semibold text-yellow-300 leading-loose">
+            {segment.trim()}
           </p>
-        )
-      })}
-    </div>
-  )
+        </div>
+      )
+    } else {
+      // Regular text: split into sentences and group into 2-3 sentence chunks
+      const sentences = segment
+        .split(/([.!?]+\s+)/)
+        .reduce((acc: string[], part, i, arr) => {
+          if (i % 2 === 0 && part.trim()) {
+            acc.push(part + (arr[i + 1] || ''))
+          }
+          return acc
+        }, [])
+        .filter(s => s.trim())
+
+      // Group sentences into paragraphs of 2-3 sentences
+      let currentChunk: string[] = []
+
+      sentences.forEach((sentence, idx) => {
+        currentChunk.push(sentence.trim())
+
+        // Create paragraph every 2-3 sentences or at the end
+        if (currentChunk.length >= 2 || idx === sentences.length - 1) {
+          const paragraphText = currentChunk.join(' ')
+
+          // Parse **bold** markdown
+          const parts = paragraphText.split(/(\*\*.*?\*\*)/)
+
+          elements.push(
+            <p key={elementKey++} className="text-lg leading-loose text-slate-200 mb-5">
+              {parts.map((part, partIdx) => {
+                if (part.startsWith('**') && part.endsWith('**')) {
+                  const boldText = part.slice(2, -2)
+                  return <strong key={partIdx} className="font-bold text-white">{boldText}</strong>
+                }
+                return <span key={partIdx}>{part}</span>
+              })}
+            </p>
+          )
+
+          currentChunk = []
+        }
+      })
+    }
+  })
+
+  return <div>{elements}</div>
 }
 
 interface StudioModeProps {
