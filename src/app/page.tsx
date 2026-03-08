@@ -5,11 +5,11 @@ import { HeroSection } from '@/components/layout/HeroSection';
 import { AuraBackground } from '@/components/layout/AuraBackground';
 import { Footer } from '@/components/layout/Footer';
 import { AboutSection } from '@/components/sections/AboutSection';
-import { ImpactSection } from '@/components/sections/ImpactSection';
 import { ContactSection } from '@/components/sections/ContactSection';
-import { StoryboardSection } from '@/components/sections/StoryboardSection';
 import { Sparkles } from 'lucide-react';
 import { getUserProfile, calculateGitHubStars, calculateProductsShipped } from '@/features/user-profile/api/actions';
+import { getAboutSection } from '@/features/user-profile/api/about-actions';
+import { AboutOwnerActions } from '@/features/user-profile/components/AboutOwnerActions';
 
 export default async function Home() {
   const supabase = await createClient();
@@ -21,12 +21,17 @@ export default async function Home() {
   let profile = null;
   let githubStars = 0;
   let productsShipped = 0;
+  let aboutData = null;
 
   if (user) {
-    const profileResult = await getUserProfile();
+    const [profileResult, about] = await Promise.all([
+      getUserProfile(),
+      getAboutSection(),
+    ]);
     if (profileResult.success && profileResult.data) {
       profile = profileResult.data;
     }
+    aboutData = about;
 
     // Calculate real stats
     githubStars = await calculateGitHubStars();
@@ -54,14 +59,8 @@ export default async function Home() {
             <a href="#products" className="nav-link">
               Products
             </a>
-            <a href="#storyboard" className="nav-link">
-              Storyboard
-            </a>
             <a href="#about" className="nav-link">
               About
-            </a>
-            <a href="#impact" className="nav-link">
-              Impact
             </a>
             <a href="#contact" className="nav-link">
               Contact
@@ -125,9 +124,24 @@ export default async function Home() {
         <div id="products">
           <QuickPeek />
         </div>
-        <StoryboardSection />
-        <AboutSection />
-        <ImpactSection />
+        <AboutSection
+          data={aboutData}
+          isOwner={!!user}
+          generateButton={
+            user ? (
+              <AboutOwnerActions currentData={aboutData ?? {
+                headline: 'I build products that',
+                headlineHighlight: 'make a difference',
+                bio: [],
+                location: '',
+                yearsExperience: '',
+                availabilityLabel: '',
+                skills: [],
+                experience: [],
+              }} />
+            ) : null
+          }
+        />
         <ContactSection />
       </main>
 

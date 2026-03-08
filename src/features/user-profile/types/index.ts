@@ -23,6 +23,29 @@ export interface UserProfile {
   updatedAt: string
 }
 
+export interface SkillGroup {
+  category: string
+  items: string[]
+}
+
+export interface ExperienceEntry {
+  role: string
+  company: string
+  period: string
+  description: string
+}
+
+export interface AboutSectionData {
+  headline: string
+  headlineHighlight: string
+  bio: string[]
+  location: string
+  yearsExperience: string
+  availabilityLabel: string
+  skills: SkillGroup[]
+  experience: ExperienceEntry[]
+}
+
 export interface OnboardingFormData {
   fullName: string
   jobTitle?: string

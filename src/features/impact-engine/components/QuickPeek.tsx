@@ -143,6 +143,7 @@ export async function QuickPeek() {
       const impact = impactResult.data.find((d) => d.repoFullName === fullName);
 
       // Try to pull cached repo_data for richer metadata
+      let tldr: string | null = null;
       let description: string | null = null;
       let language: string | null = null;
       let stars = 0;
@@ -159,6 +160,7 @@ export async function QuickPeek() {
 
       if (cached?.repo_data) {
         const rd = cached.repo_data as Record<string, unknown>;
+        tldr = (rd.tldr as string) || null;
         description = (rd.description as string) || null;
         language = (rd.language as string) || null;
         stars = Number(rd.stargazersCount) || 0;
@@ -167,9 +169,17 @@ export async function QuickPeek() {
         pushedAt = (rd.pushedAt as string) || '';
       }
 
+      const { data: videoData } = await supabase
+        .from('project_videos')
+        .select('video_url, thumbnail_url')
+        .eq('user_id', user.id)
+        .eq('repository_url', fullName)
+        .single();
+
       products.push({
         owner: repoId.owner,
         repo: repoId.repo,
+        tldr,
         description,
         language,
         stars,
@@ -178,16 +188,25 @@ export async function QuickPeek() {
         pushedAt,
         metrics: impact?.metrics ?? [],
         lastUpdated: impact?.lastUpdated ?? null,
-        demoCoverUrl: null, // TODO: Fetch from storyboard/demo data
-        demoVideoUrl: null, // TODO: Fetch from storyboard/demo data
+        demoCoverUrl: videoData?.thumbnail_url ?? null,
+        demoVideoUrl: videoData?.video_url ?? null,
       });
     }
   } else {
     // Fallback: no impact data but we still know which repos exist
     for (const repoId of repos) {
+      const fullName = `${repoId.owner}/${repoId.repo}`;
+      const { data: videoData } = await supabase
+        .from('project_videos')
+        .select('video_url, thumbnail_url')
+        .eq('user_id', user.id)
+        .eq('repository_url', fullName)
+        .single();
+
       products.push({
         owner: repoId.owner,
         repo: repoId.repo,
+        tldr: null,
         description: null,
         language: null,
         stars: 0,
@@ -196,8 +215,8 @@ export async function QuickPeek() {
         pushedAt: '',
         metrics: [],
         lastUpdated: null,
-        demoCoverUrl: null,
-        demoVideoUrl: null,
+        demoCoverUrl: videoData?.thumbnail_url ?? null,
+        demoVideoUrl: videoData?.video_url ?? null,
       });
     }
   }

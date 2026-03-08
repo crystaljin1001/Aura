@@ -7,7 +7,7 @@ import type { ImpactMetric } from '@/types';
 import { cn } from '@/utils/cn';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Code2, Eye, Github, Star, GitFork, Users, Sparkles, CheckCircle2 } from 'lucide-react';
+import { Code2, Eye, Github, Star, GitFork, Users, Sparkles, CheckCircle2, Play } from 'lucide-react';
 import { decodeHtmlEntities } from '@/lib/utils/html';
 
 /* ------------------------------------------------------------------ */
@@ -17,6 +17,7 @@ import { decodeHtmlEntities } from '@/lib/utils/html';
 export interface RepoProduct {
   owner: string;
   repo: string;
+  tldr: string | null;
   description: string | null;
   language: string | null;
   stars: number;
@@ -41,6 +42,20 @@ interface RepoProductCardProps {
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
+/** Extract a thumbnail URL from a video URL, supporting YouTube auto-thumbnails. */
+function deriveThumbnailUrl(coverUrl: string | null | undefined, videoUrl: string | null | undefined): string | null {
+  if (coverUrl) return coverUrl;
+  if (!videoUrl) return null;
+
+  // YouTube: https://www.youtube.com/watch?v=ID or https://youtu.be/ID
+  const ytMatch = videoUrl.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+  if (ytMatch) {
+    return `https://img.youtube.com/vi/${ytMatch[1]}/maxresdefault.jpg`;
+  }
+
+  return null;
+}
+
 /* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
@@ -49,12 +64,15 @@ export function RepoProductCard({ product, featured = false }: RepoProductCardPr
   const {
     owner,
     repo,
+    tldr,
     description,
     stars,
     forks,
     metrics,
     techStack,
   } = product;
+
+  const resolvedCoverUrl = deriveThumbnailUrl(product.demoCoverUrl, product.demoVideoUrl);
 
   const nonZeroMetrics = metrics.filter((m) => m.value > 0);
   const topHighlights = nonZeroMetrics.slice(0, 3);
@@ -73,14 +91,39 @@ export function RepoProductCard({ product, featured = false }: RepoProductCardPr
       )}
     >
       <div className="grid grid-cols-1 lg:grid-cols-2">
-        {/* Left: Interactive Demo Area */}
-        <div className="relative bg-gradient-to-br from-blue-900/40 via-blue-800/30 to-cyan-900/40 flex items-center justify-center min-h-[300px] lg:min-h-[400px]">
-          <div className="text-center">
-            <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
-              <Code2 className="w-12 h-12 text-white" />
+        {/* Left: Demo Video Cover or Placeholder */}
+        <div className="relative bg-gradient-to-br from-blue-900/40 via-blue-800/30 to-cyan-900/40 flex items-center justify-center min-h-[300px] lg:min-h-[400px] overflow-hidden">
+          {resolvedCoverUrl || product.demoVideoUrl ? (
+            <a
+              href={product.demoVideoUrl ?? '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute inset-0 group/play"
+            >
+              {resolvedCoverUrl ? (
+                <img
+                  src={resolvedCoverUrl}
+                  alt={`${repo} demo`}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-gradient-to-br from-slate-800 to-slate-900" />
+              )}
+              {/* Play button overlay */}
+              <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover/play:bg-black/50 transition-colors">
+                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center group-hover/play:scale-110 transition-transform shadow-lg">
+                  <Play className="w-7 h-7 text-white fill-white ml-1" />
+                </div>
+              </div>
+            </a>
+          ) : (
+            <div className="text-center">
+              <div className="w-24 h-24 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
+                <Code2 className="w-12 h-12 text-white" />
+              </div>
+              <p className="text-base text-muted-foreground">Interactive Demo</p>
             </div>
-            <p className="text-base text-muted-foreground">Interactive Demo</p>
-          </div>
+          )}
         </div>
 
         {/* Right: Product Details */}
@@ -110,9 +153,16 @@ export function RepoProductCard({ product, featured = false }: RepoProductCardPr
           </div>
 
           {/* Product Title */}
-          <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-3">
+          <h3 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
             {repo}
           </h3>
+
+          {/* TL;DR */}
+          {tldr && (
+            <p className="text-base font-medium text-foreground/80 mb-3">
+              {tldr}
+            </p>
+          )}
 
           {/* Description */}
           {description && (
