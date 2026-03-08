@@ -1,6 +1,6 @@
 import { Badge } from '@/components/ui/badge';
-import { MapPin, Calendar, Briefcase, Building2 } from 'lucide-react';
-import type { AboutSectionData } from '@/features/user-profile/types';
+import { MapPin, Calendar, Briefcase, Building2, Star, GitFork, Code2, ExternalLink } from 'lucide-react';
+import type { AboutSectionData, SoloProject } from '@/features/user-profile/types';
 
 /* ------------------------------------------------------------------ */
 /*  Defaults                                                           */
@@ -48,21 +48,46 @@ function getCategoryStyle(category: string) {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Helpers                                                            */
+/* ------------------------------------------------------------------ */
+
+function formatPushedAt(iso: string | null): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
+
+const LANGUAGE_COLORS: Record<string, string> = {
+  TypeScript: 'text-blue-400',
+  JavaScript: 'text-yellow-400',
+  Python:     'text-green-400',
+  Rust:       'text-orange-400',
+  Go:         'text-cyan-400',
+  Swift:      'text-orange-300',
+  Kotlin:     'text-purple-400',
+  Java:       'text-red-400',
+};
+
+/* ------------------------------------------------------------------ */
 /*  Component                                                          */
 /* ------------------------------------------------------------------ */
 
 interface AboutSectionProps {
   data?: AboutSectionData | null;
+  soloProjects?: SoloProject[];
   isOwner?: boolean;
   generateButton?: React.ReactNode;
 }
 
-export function AboutSection({ data, isOwner, generateButton }: AboutSectionProps) {
+export function AboutSection({ data, soloProjects = [], isOwner, generateButton }: AboutSectionProps) {
   const d = data ?? DEFAULT_DATA;
 
   const headlineBase = d.headline.endsWith(d.headlineHighlight)
     ? d.headline.slice(0, -d.headlineHighlight.length)
     : d.headline + ' ';
+
+  const hasExperience = d.experience.length > 0;
+  const hasProjects = soloProjects.length > 0;
 
   return (
     <section id="about" className="py-28 px-4 relative">
@@ -120,7 +145,7 @@ export function AboutSection({ data, isOwner, generateButton }: AboutSectionProp
             )}
           </div>
 
-          {/* ── Right: Skills & Experience ── */}
+          {/* ── Right: Skills + Timeline ── */}
           <div className="space-y-10">
 
             {/* Skills */}
@@ -157,41 +182,117 @@ export function AboutSection({ data, isOwner, generateButton }: AboutSectionProp
               </div>
             )}
 
-            {/* Experience */}
-            <div>
-              <h3 className="text-sm font-mono uppercase tracking-widest text-muted-foreground mb-6">
-                Experience
-              </h3>
-              {d.experience.length > 0 ? (
-                <div className="space-y-3">
-                  {d.experience.map((exp) => (
-                    <div
-                      key={`${exp.company}-${exp.role}`}
-                      className="relative pl-4 border-l-2 border-border hover:border-blue-500/50 transition-colors group"
-                    >
-                      <div className="flex items-start justify-between mb-0.5">
-                        <h4 className="font-semibold text-foreground text-sm">{exp.role}</h4>
-                        <span className="text-xs text-muted-foreground shrink-0 ml-3">{exp.period}</span>
+            {/* ── Experience + Solo Projects timeline ── */}
+            {(hasExperience || hasProjects || isOwner) && (
+              <div>
+                <h3 className="text-sm font-mono uppercase tracking-widest text-muted-foreground mb-6">
+                  Experience & Projects
+                </h3>
+
+                <div className="space-y-0">
+
+                  {/* Work Experience entries */}
+                  {hasExperience && (
+                    <div className="mb-6">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Building2 className="w-3.5 h-3.5 text-muted-foreground/60" />
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                          Work
+                        </span>
                       </div>
-                      <div className="flex items-center gap-1.5 mb-1.5">
-                        <Building2 className="w-3 h-3 text-muted-foreground/60" />
-                        <p className="text-xs text-muted-foreground font-medium">{exp.company}</p>
+                      <div className="space-y-4 pl-1">
+                        {d.experience.map((exp) => (
+                          <div
+                            key={`${exp.company}-${exp.role}`}
+                            className="relative pl-4 border-l-2 border-border hover:border-blue-500/50 transition-colors"
+                          >
+                            <div className="flex items-start justify-between mb-0.5">
+                              <h4 className="font-semibold text-foreground text-sm">{exp.role}</h4>
+                              <span className="text-xs text-muted-foreground shrink-0 ml-3">{exp.period}</span>
+                            </div>
+                            <p className="text-xs text-muted-foreground font-medium mb-1">{exp.company}</p>
+                            {exp.description && (
+                              <p className="text-xs text-muted-foreground/80 leading-relaxed">{exp.description}</p>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                      {exp.description && (
-                        <p className="text-xs text-muted-foreground/80 leading-relaxed">{exp.description}</p>
-                      )}
                     </div>
-                  ))}
+                  )}
+
+                  {/* Solo Projects timeline */}
+                  {hasProjects && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-3">
+                        <Code2 className="w-3.5 h-3.5 text-muted-foreground/60" />
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/60">
+                          Solo Projects
+                        </span>
+                      </div>
+                      <div className="space-y-3 pl-1">
+                        {soloProjects.map((p) => {
+                          const langColor = LANGUAGE_COLORS[p.language ?? ''] ?? 'text-muted-foreground';
+                          return (
+                            <div
+                              key={`${p.owner}/${p.repo}`}
+                              className="relative pl-4 border-l-2 border-border hover:border-cyan-500/50 transition-colors group"
+                            >
+                              <div className="flex items-start justify-between mb-0.5">
+                                <a
+                                  href={`/p/${p.owner}-${p.repo}`}
+                                  className="font-semibold text-foreground text-sm group-hover:text-cyan-400 transition-colors flex items-center gap-1"
+                                >
+                                  {p.repo}
+                                  <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-60 transition-opacity" />
+                                </a>
+                                {p.pushedAt && (
+                                  <span className="text-xs text-muted-foreground shrink-0 ml-3">
+                                    {formatPushedAt(p.pushedAt)}
+                                  </span>
+                                )}
+                              </div>
+                              {p.description && (
+                                <p className="text-xs text-muted-foreground/80 leading-relaxed mb-1.5">
+                                  {p.description}
+                                </p>
+                              )}
+                              <div className="flex items-center gap-3 text-[11px] text-muted-foreground/60">
+                                {p.language && (
+                                  <span className={`font-medium ${langColor}`}>{p.language}</span>
+                                )}
+                                {p.stars > 0 && (
+                                  <span className="flex items-center gap-1">
+                                    <Star className="w-3 h-3 text-amber-400/70" />
+                                    {p.stars}
+                                  </span>
+                                )}
+                                {p.forks > 0 && (
+                                  <span className="flex items-center gap-1">
+                                    <GitFork className="w-3 h-3 text-blue-400/70" />
+                                    {p.forks}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Empty state for owners */}
+                  {!hasExperience && !hasProjects && isOwner && (
+                    <div className="border border-dashed border-border rounded-xl p-5 text-center">
+                      <p className="text-sm text-muted-foreground">
+                        Upload your CV in Settings, then click{' '}
+                        <span className="text-blue-400">&quot;Generate with AI&quot;</span> to populate your experience.
+                      </p>
+                    </div>
+                  )}
+
                 </div>
-              ) : isOwner ? (
-                <div className="border border-dashed border-border rounded-xl p-5 text-center">
-                  <p className="text-sm text-muted-foreground">
-                    Upload your CV in Settings, then click{' '}
-                    <span className="text-blue-400">&quot;Generate with AI&quot;</span> to populate your experience.
-                  </p>
-                </div>
-              ) : null}
-            </div>
+              </div>
+            )}
 
           </div>
         </div>

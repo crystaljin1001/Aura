@@ -8,8 +8,10 @@ import { AboutSection } from '@/components/sections/AboutSection';
 import { ContactSection } from '@/components/sections/ContactSection';
 import { Sparkles } from 'lucide-react';
 import { getUserProfile, calculateGitHubStars, calculateProductsShipped } from '@/features/user-profile/api/actions';
-import { getAboutSection } from '@/features/user-profile/api/about-actions';
+import { getAboutSection, getSoloProjects } from '@/features/user-profile/api/about-actions';
+import type { SoloProject } from '@/features/user-profile/types';
 import { AboutOwnerActions } from '@/features/user-profile/components/AboutOwnerActions';
+import { SharePortfolioButton } from '@/components/ui/SharePortfolioButton';
 
 export default async function Home() {
   const supabase = await createClient();
@@ -22,12 +24,15 @@ export default async function Home() {
   let githubStars = 0;
   let productsShipped = 0;
   let aboutData = null;
+  let soloProjects: SoloProject[] = [];
 
   if (user) {
-    const [profileResult, about] = await Promise.all([
+    const [profileResult, about, projects] = await Promise.all([
       getUserProfile(),
       getAboutSection(),
+      getSoloProjects(),
     ]);
+    soloProjects = projects;
     if (profileResult.success && profileResult.data) {
       profile = profileResult.data;
     }
@@ -82,6 +87,7 @@ export default async function Home() {
             )}
             {user ? (
               <div className="flex items-center gap-4">
+                <SharePortfolioButton url={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}`} />
                 <Link
                   href="/dashboard"
                   className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors"
@@ -126,6 +132,7 @@ export default async function Home() {
         </div>
         <AboutSection
           data={aboutData}
+          soloProjects={soloProjects}
           isOwner={!!user}
           generateButton={
             user ? (

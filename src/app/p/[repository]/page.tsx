@@ -23,7 +23,7 @@ export default async function PublicCaseStudyPage({ params }: PageProps) {
 
   const result = await getPublicProjectData(repositoryParam)
 
-  if (!result.success || !result.data) {
+  if (!result.success) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-4">
         <div className="text-center">

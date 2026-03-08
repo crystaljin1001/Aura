@@ -35,6 +35,16 @@ export interface ExperienceEntry {
   description: string
 }
 
+export interface SoloProject {
+  owner: string
+  repo: string
+  description: string | null
+  language: string | null
+  stars: number
+  forks: number
+  pushedAt: string | null
+}
+
 export interface AboutSectionData {
   headline: string
   headlineHighlight: string

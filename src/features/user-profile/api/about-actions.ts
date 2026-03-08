@@ -53,6 +53,55 @@ export async function getAboutSection(): Promise<AboutSectionData | null> {
 }
 
 /* ------------------------------------------------------------------ */
+/*  Solo Projects                                                      */
+/* ------------------------------------------------------------------ */
+
+import type { SoloProject } from '../types'
+
+export async function getSoloProjects(): Promise<SoloProject[]> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return []
+
+    const { data: repos } = await supabase
+      .from('user_repositories')
+      .select('repo_owner, repo_name')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (!repos || repos.length === 0) return []
+
+    const projects: SoloProject[] = []
+
+    for (const r of repos) {
+      const fullName = `${r.repo_owner}/${r.repo_name}`
+      const { data: cached } = await supabase
+        .from('impact_cache')
+        .select('repo_data')
+        .eq('user_id', user.id)
+        .eq('repo_full_name', fullName)
+        .single()
+
+      const rd = (cached?.repo_data ?? {}) as Record<string, unknown>
+      projects.push({
+        owner: r.repo_owner,
+        repo: r.repo_name,
+        description: (rd.tldr as string) || (rd.description as string) || null,
+        language: (rd.language as string) || null,
+        stars: Number(rd.stargazersCount) || 0,
+        forks: Number(rd.forksCount) || 0,
+        pushedAt: (rd.pushedAt as string) || null,
+      })
+    }
+
+    return projects
+  } catch {
+    return []
+  }
+}
+
+/* ------------------------------------------------------------------ */
 /*  Save                                                               */
 /* ------------------------------------------------------------------ */
 
