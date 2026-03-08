@@ -226,17 +226,21 @@ export async function QuickPeek() {
     <section id="products" className="py-24 px-4">
       <div className="max-w-6xl mx-auto">
         {/* Section Header */}
-        <div className="text-center mb-16">
-          <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-3">
-            Products
-          </p>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-foreground mb-4">
-            Things I've{' '}
-            <span className="gradient-text">built</span>
-          </h2>
-          <p className="text-base text-muted-foreground max-w-xl mx-auto">
-            A collection of products I've shipped. Each one solves a real problem I faced as a builder.
-          </p>
+        <div className="mb-16 relative">
+          {/* Subtle separator */}
+          <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-px h-10 bg-gradient-to-b from-transparent via-border to-transparent" />
+          <div className="text-center">
+            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-4">
+              Proof of Work
+            </p>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-4">
+              Things I&apos;ve{' '}
+              <span className="gradient-text">shipped</span>
+            </h2>
+            <p className="text-base text-muted-foreground max-w-lg mx-auto leading-relaxed">
+              Real products. Real users. Real impact — backed by data.
+            </p>
+          </div>
         </div>
 
         {/* Product stack - horizontal cards */}

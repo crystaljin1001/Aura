@@ -258,6 +258,28 @@ html {
   color: inherit;
 }
 
+/* Fade-in / slide-in animation utilities */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.animate-in {
+  animation-fill-mode: both;
+}
+
+.fade-in {
+  animation-name: fadeInUp;
+}
+
+.duration-500 {
+  animation-duration: 0.5s;
+}
+
+.slide-in-from-bottom-2 {
+  /* handled by fadeInUp */
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;
