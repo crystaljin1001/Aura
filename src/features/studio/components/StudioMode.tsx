@@ -14,6 +14,15 @@ import type { Project } from '@/features/projects/types'
 import type { HeroCommitCodeSnippet } from '@/features/narrative-storyboarder/api/github-actions'
 import type { LogicMap } from '@/features/portfolio/types/logic-map'
 
+/** Strip commit SHAs (em-dash wrapped or bare 7-char hex) from display text */
+function stripCommitHashes(text: string): string {
+  // Remove —sha— patterns (em-dash wrapped): "commit—94ec853—where" → "commit where"
+  return text
+    .replace(/[—–][0-9a-f]{6,40}[—–]/g, ' ')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
 /**
  * Formats script content with markdown-style bold and highlighted visual cues
  */
@@ -21,8 +30,11 @@ function FormattedScript({ content }: { content: string }) {
   const elements: React.ReactElement[] = []
   let elementKey = 0
 
+  // Strip commit hashes before processing
+  const cleanedContent = stripCommitHashes(content)
+
   // First, extract and separate visual cues from regular text
-  const segments = content.split(/(\[(?:VISUAL CUE|Transition):[^\]]+\])/)
+  const segments = cleanedContent.split(/(\[(?:VISUAL CUE|Transition):[^\]]+\])/)
 
   segments.forEach((segment) => {
     if (!segment.trim()) return
@@ -115,6 +127,42 @@ export function StudioMode({ project, script, diagram, logicMap }: StudioModePro
   const [showInstructions, setShowInstructions] = useState(true)
   const [heroCodeSnippet, setHeroCodeSnippet] = useState<HeroCommitCodeSnippet | null>(null)
   const [isLoadingCode, setIsLoadingCode] = useState(false)
+  const [tradeoffCode, setTradeoffCode] = useState<{ filename: string; language: string; code: string; commitMessage: string } | null>(null)
+  const [isLoadingTradeoffCode, setIsLoadingTradeoffCode] = useState(false)
+  const [showTradeoffCode, setShowTradeoffCode] = useState(false)
+
+  // Fetch code for commit SHAs referenced in Chapter IV (Trade-off & Execution)
+  useEffect(() => {
+    async function fetchTradeoffCode() {
+      if (script?.type !== 'product_minded_engineer') return
+      const tradeoffContent: string = (script as any).tradeoffExecution || ''
+      if (!tradeoffContent) return
+
+      // Extract 7-char commit SHAs (hex) from the text
+      const shaMatches = tradeoffContent.match(/[0-9a-f]{7,10}\b/g)
+      const commitSha = shaMatches?.[0]
+      if (!commitSha) return
+
+      const [owner, repo] = project.repository.split('/')
+      setIsLoadingTradeoffCode(true)
+      try {
+        const res = await fetch('/api/studio/fetch-commit-code', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ owner, repo, commitSha }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          if (data.success && data.data) setTradeoffCode(data.data)
+        }
+      } catch (e) {
+        console.error('[StudioMode] Failed to fetch tradeoff code:', e)
+      } finally {
+        setIsLoadingTradeoffCode(false)
+      }
+    }
+    fetchTradeoffCode()
+  }, [script, project.repository])
 
   // Debug: Log logicMap prop
   console.log('[StudioMode] Received props:', {
@@ -385,19 +433,39 @@ export function StudioMode({ project, script, diagram, logicMap }: StudioModePro
               )}
               {currentContentType === 'diagram' && 'Architecture Diagram'}
               {currentContentType === 'code' && 'Hero Commit Code'}
-              {currentContentType === 'decisionTree' && 'Technical Decisions'}
+              {currentContentType === 'decisionTree' && (showTradeoffCode ? 'Evidence — Commit Code' : 'Technical Decisions')}
               {currentContentType === 'metrics' && 'Impact Metrics'}
             </h2>
-            <button
-              onClick={() => setIsFullscreen(!isFullscreen)}
-              className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
-              title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
-            >
-              <Maximize2 className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-2">
+              {currentContentType === 'decisionTree' && (tradeoffCode || isLoadingTradeoffCode) && (
+                <button
+                  onClick={() => setShowTradeoffCode(v => !v)}
+                  className={`px-3 py-1.5 text-xs rounded-lg transition-colors font-medium flex items-center gap-1.5 ${
+                    showTradeoffCode
+                      ? 'bg-slate-700 hover:bg-slate-600 text-slate-200'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
+                >
+                  {isLoadingTradeoffCode ? (
+                    <span className="animate-pulse">Loading code...</span>
+                  ) : showTradeoffCode ? (
+                    <><span>🌳</span><span>Decision Trees</span></>
+                  ) : (
+                    <><span>{'</>'}</span><span>View Evidence Code</span></>
+                  )}
+                </button>
+              )}
+              <button
+                onClick={() => setIsFullscreen(!isFullscreen)}
+                className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                title={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+              >
+                <Maximize2 className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
-          <div className={`flex-1 overflow-auto ${currentContentType === 'code' || currentContentType === 'hero' ? 'p-0' : 'p-6'} ${isFullscreen ? 'absolute inset-0 z-50 bg-slate-950' : ''}`}>
+          <div className={`flex-1 overflow-auto ${currentContentType === 'code' || currentContentType === 'hero' || currentContentType === 'decisionTree' ? 'p-0' : 'p-6'} ${isFullscreen ? 'absolute inset-0 z-50 bg-slate-950' : ''}`}>
             {/* Hero Asset (Chapter 1) OR Product UI (Chapter 2) */}
             {currentContentType === 'hero' && (
               <>
@@ -484,33 +552,22 @@ export function StudioMode({ project, script, diagram, logicMap }: StudioModePro
               </>
             )}
 
-            {/* Decision Tree / Logic Map (Chapter 4 for Master Demo) */}
+            {/* Decision Tree / Logic Map + Commit Code (Chapter 4 for Master Demo) */}
             {currentContentType === 'decisionTree' && (
-              <>
-                {(() => {
-                  console.log('[StudioMode] Rendering decision tree section:', {
-                    currentContentType,
-                    currentChapter,
-                    hasLogicMap: !!logicMap,
-                    hasDecisionNodes: !!logicMap?.decisionNodes,
-                    decisionNodesLength: logicMap?.decisionNodes?.length || 0,
-                  })
-                  return null
-                })()}
-                {logicMap && logicMap.decisionNodes && logicMap.decisionNodes.length > 0 ? (
-                  <div className="w-full h-full overflow-y-auto p-8 bg-slate-950">
-                    <div className="max-w-4xl mx-auto">
-                      <div className="mb-8">
-                        <h3 className="text-2xl font-bold text-white mb-2">Technical Decisions</h3>
-                        <p className="text-sm text-slate-400">
-                          Each tree shows: <strong className="text-slate-300">The Challenge</strong> (problem) → <strong className="text-slate-300">Pivot / Alternative</strong> (rejected alternatives with "Why NOT?") → <strong className="text-slate-300">Chosen Solution</strong> (chosen solution)
-                        </p>
-                      </div>
-
-                      <div className="space-y-12">
-                        {logicMap.decisionNodes.map((decision, index) => {
-                          console.log(`[StudioMode] Rendering DecisionTreeNode ${index}:`, decision)
-                          return (
+              <div className="w-full h-full overflow-y-auto">
+                {/* Decision Trees view */}
+                {!showTradeoffCode && (
+                  <div className="p-8 bg-slate-950 min-h-full">
+                    {logicMap && logicMap.decisionNodes && logicMap.decisionNodes.length > 0 ? (
+                      <div className="max-w-3xl mx-auto">
+                        <div className="mb-8">
+                          <h3 className="text-2xl font-bold text-white mb-2">Technical Decisions</h3>
+                          <p className="text-sm text-slate-400">
+                            Each tree shows: <strong className="text-slate-300">The Challenge</strong> → <strong className="text-slate-300">Rejected Alternatives</strong> → <strong className="text-slate-300">Chosen Solution</strong>
+                          </p>
+                        </div>
+                        <div className="space-y-12">
+                          {logicMap.decisionNodes.map((decision, index) => (
                             <DecisionTreeNode
                               key={index}
                               decision={decision}
@@ -518,22 +575,48 @@ export function StudioMode({ project, script, diagram, logicMap }: StudioModePro
                               allDecisions={logicMap.decisionNodes}
                               repositoryUrl={project.repository}
                             />
-                          )
-                        })}
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="h-full flex items-center justify-center">
-                    <div className="text-center space-y-3">
-                      <p className="text-slate-400">No technical decisions available</p>
-                      <p className="text-xs text-slate-500">
-                        Add decision trees in your Logic Map to display them here
-                      </p>
-                    </div>
+                    ) : (
+                      <div className="h-full flex items-center justify-center">
+                        <div className="text-center space-y-3">
+                          <p className="text-slate-400">No technical decisions available</p>
+                          <p className="text-xs text-slate-500">Add decision trees in your Logic Map to display them here</p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
-              </>
+
+                {/* Commit Code view */}
+                {showTradeoffCode && (
+                  <div className="h-full bg-slate-900 flex flex-col">
+                    {tradeoffCode && (
+                      <div className="px-6 py-3 border-b border-slate-800 flex-shrink-0">
+                        <p className="text-sm text-slate-300 font-mono truncate">{tradeoffCode.filename}</p>
+                        {tradeoffCode.commitMessage && (
+                          <p className="text-xs text-slate-500 mt-0.5 truncate">{tradeoffCode.commitMessage}</p>
+                        )}
+                      </div>
+                    )}
+                    {isLoadingTradeoffCode ? (
+                      <div className="flex-1 flex items-center justify-center">
+                        <div className="text-center space-y-3">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-400 mx-auto" />
+                          <p className="text-sm text-slate-400">Loading commit code...</p>
+                        </div>
+                      </div>
+                    ) : tradeoffCode ? (
+                      <HeroCodeSnippet
+                        code={tradeoffCode.code}
+                        filename={tradeoffCode.filename}
+                        language={tradeoffCode.language}
+                      />
+                    ) : null}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Impact Metrics (Chapter 5 for Master Demo) */}

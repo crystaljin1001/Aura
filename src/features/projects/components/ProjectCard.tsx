@@ -12,13 +12,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { deleteProject } from '../actions'
-import type { Project } from '../types'
+import { deleteProject, findHeroCommitForProject, saveHeroCommit, acceptHeroCommit } from '../actions'
+import type { Project, HeroCommit } from '../types'
 import { ScriptEditorModal } from './ScriptEditorModal'
 import { VideoUploadModal } from './VideoUploadModal'
 import { ViewScriptModal } from './ViewScriptModal'
 import { EditScriptTextModal } from './EditScriptTextModal'
 import { ArchitectureDiagramModal } from './ArchitectureDiagramModal'
+import { HeroCommitModal } from './HeroCommitModal'
+import { AddDecisionModal } from './AddDecisionModal'
+import { DemoFlowModal } from './DemoFlowModal'
 import { CompletnessBadge } from '@/features/portfolio/components/CompletnessBadge'
 import { AnalyzingCard } from './AnalyzingCard'
 import { DraftCard } from './DraftCard'
@@ -45,6 +48,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
   const [showViewScriptModal, setShowViewScriptModal] = useState(false)
   const [showEditScriptModal, setShowEditScriptModal] = useState(false)
   const [showDiagramModal, setShowDiagramModal] = useState(false)
+  const [showHeroCommitModal, setShowHeroCommitModal] = useState(false)
+  const [showAddDecisionModal, setShowAddDecisionModal] = useState(false)
+  const [showDemoFlowModal, setShowDemoFlowModal] = useState(false)
+  const [heroCommit, setHeroCommit] = useState<HeroCommit | null>(
+    project.draftData?.heroCommit || null
+  )
+  const [isFindingHeroCommit, setIsFindingHeroCommit] = useState(false)
   const [isPending, startTransition] = useTransition()
 
   function handleDelete() {
@@ -59,8 +69,66 @@ export function ProjectCard({ project }: ProjectCardProps) {
     window.open(`https://github.com/${project.repository}`, '_blank')
   }
 
-  function handleRecordVideo() {
-    // Navigate to Studio Mode instead of opening modal
+  async function handleRecordVideo() {
+    // Check if hero commit is already approved
+    if (project.draftData?.heroCommit?.userApproved) {
+      // Go directly to Studio Mode
+      router.push(`/studio/${project.id}`)
+      return
+    }
+
+    // Check if we have a hero commit already
+    if (project.draftData?.heroCommit && !project.draftData.heroCommit.userApproved) {
+      // Show the existing hero commit
+      setHeroCommit(project.draftData.heroCommit)
+      setShowHeroCommitModal(true)
+      return
+    }
+
+    // Find hero commit for first time
+    setIsFindingHeroCommit(true)
+    setShowHeroCommitModal(true)
+
+    const result = await findHeroCommitForProject(project.id)
+
+    setIsFindingHeroCommit(false)
+
+    if (result.success && result.data && result.data.length > 0) {
+      const topCandidate = result.data[0]
+      setHeroCommit(topCandidate)
+      await saveHeroCommit(project.id, topCandidate)
+    } else {
+      // No hero commit found, go directly to Studio Mode
+      setShowHeroCommitModal(false)
+      router.push(`/studio/${project.id}`)
+    }
+  }
+
+  async function handleAcceptHeroCommit(commit: HeroCommit) {
+    await acceptHeroCommit(project.id)
+    setShowHeroCommitModal(false)
+    router.push(`/studio/${project.id}`)
+  }
+
+  async function handleFindAnotherHeroCommit() {
+    setIsFindingHeroCommit(true)
+
+    const result = await findHeroCommitForProject(project.id)
+
+    setIsFindingHeroCommit(false)
+
+    if (result.success && result.data && result.data.length > 1) {
+      // Show the second candidate
+      const nextCandidate = result.data[1]
+      setHeroCommit(nextCandidate)
+      await saveHeroCommit(project.id, nextCandidate)
+    }
+  }
+
+  function handlePasteOwnCommit(commitUrl: string) {
+    // TODO: Parse commit URL and fetch commit data
+    // For now, just skip to Studio Mode
+    setShowHeroCommitModal(false)
     router.push(`/studio/${project.id}`)
   }
 
@@ -75,6 +143,11 @@ export function ProjectCard({ project }: ProjectCardProps) {
               {project.description && (
                 <p className="text-sm text-muted-foreground line-clamp-2">
                   {project.description}
+                </p>
+              )}
+              {project.draftData?.tldr && (
+                <p className="text-sm text-foreground mt-2 font-medium">
+                  {project.draftData.tldr}
                 </p>
               )}
             </div>
@@ -162,10 +235,14 @@ export function ProjectCard({ project }: ProjectCardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              {project.hasScript && (
+              {project.hasScript ? (
                 <>
                   <DropdownMenuItem onClick={handleRecordVideo}>
                     🎬 Open Studio Mode
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setShowDemoFlowModal(true)}>
+                    🚀 Prepare for Demo
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => setShowViewScriptModal(true)}>
@@ -179,6 +256,16 @@ export function ProjectCard({ project }: ProjectCardProps) {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setShowDiagramModal(true)}>
                     📊 Architecture Diagram
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              ) : (
+                <>
+                  <DropdownMenuItem onClick={() => setShowDemoFlowModal(true)}>
+                    🚀 Prepare for Demo
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowScriptModal(true)}>
+                    ✨ Convert README
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                 </>
@@ -228,6 +315,26 @@ export function ProjectCard({ project }: ProjectCardProps) {
         project={project}
         isOpen={showDiagramModal}
         onClose={() => setShowDiagramModal(false)}
+        onOpenDecisionForm={() => setShowAddDecisionModal(true)}
+      />
+      <AddDecisionModal
+        project={project}
+        isOpen={showAddDecisionModal}
+        onClose={() => setShowAddDecisionModal(false)}
+      />
+      <HeroCommitModal
+        isOpen={showHeroCommitModal}
+        onClose={() => setShowHeroCommitModal(false)}
+        heroCommit={heroCommit}
+        onAccept={handleAcceptHeroCommit}
+        onFindAnother={handleFindAnotherHeroCommit}
+        onPasteOwn={handlePasteOwnCommit}
+        isFindingAnother={isFindingHeroCommit}
+      />
+      <DemoFlowModal
+        project={project}
+        isOpen={showDemoFlowModal}
+        onClose={() => setShowDemoFlowModal(false)}
       />
     </>
   )

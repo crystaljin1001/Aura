@@ -20,6 +20,7 @@ import {
   isUserJourneyScript,
   isTechnicalArchitectureScript,
   isLegacyScript,
+  isProductMindedEngineerScript,
   type NarrativeScript,
   type ScriptType,
   type UserJourneyScript,
@@ -76,18 +77,20 @@ export function EditScriptTextModal({ project, isOpen, onClose }: EditScriptText
       if (data && data.length > 0) {
         setScripts(data)
 
-        // Auto-select first non-legacy script (prefer User Journey, then Technical Architecture)
+        // Auto-select: prefer product_minded_engineer, then user_journey, then technical_architecture
+        const productMinded = data.find(s => s.script_type === 'product_minded_engineer')
         const userJourney = data.find(s => s.script_type === 'user_journey')
         const technical = data.find(s => s.script_type === 'technical_architecture')
 
-        if (userJourney) {
+        if (productMinded) {
+          setSelectedScriptType('product_minded_engineer')
+          setEditedScript(productMinded.generated_script)
+        } else if (userJourney) {
           setSelectedScriptType('user_journey')
           setEditedScript(userJourney.generated_script)
-          console.log('[EditScriptTextModal] Auto-selected script type: user_journey')
         } else if (technical) {
           setSelectedScriptType('technical_architecture')
           setEditedScript(technical.generated_script)
-          console.log('[EditScriptTextModal] Auto-selected script type: technical_architecture')
         } else {
           setError('No scripts found for this project')
         }
@@ -145,12 +148,11 @@ export function EditScriptTextModal({ project, isOpen, onClose }: EditScriptText
   }
 
   // Get unique script types for tabs (exclude legacy scripts)
+  const productMindedScript = scripts.find(s => s.script_type === 'product_minded_engineer')
   const userJourneyScript = scripts.find(s => s.script_type === 'user_journey')
   const technicalScript = scripts.find(s => s.script_type === 'technical_architecture')
-  // Don't show legacy scripts in tabs
-  // const legacyScript = scripts.find(s => !s.script_type && isLegacyScript(s.generated_script))
 
-  const hasMultipleScripts = (userJourneyScript && technicalScript) || scripts.filter(s => s.script_type).length > 1
+  const hasMultipleScripts = scripts.filter(s => s.script_type).length > 1
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -172,6 +174,18 @@ export function EditScriptTextModal({ project, isOpen, onClose }: EditScriptText
             {/* Script Type Tabs - Only show if multiple scripts exist */}
             {hasMultipleScripts && (
               <div className="flex gap-2 border-b border-border pb-2">
+                {productMindedScript && (
+                  <button
+                    onClick={() => setSelectedScriptType('product_minded_engineer')}
+                    className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
+                      selectedScriptType === 'product_minded_engineer'
+                        ? 'bg-green-500/20 text-green-400 border-b-2 border-green-500'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    🚀 Master Demo
+                  </button>
+                )}
                 {userJourneyScript && (
                   <button
                     onClick={() => setSelectedScriptType('user_journey')}
@@ -213,7 +227,35 @@ export function EditScriptTextModal({ project, isOpen, onClose }: EditScriptText
 
             {/* Editing Form */}
             <div className="space-y-6">
-              {isUserJourneyScript(editedScript) ? (
+              {isProductMindedEngineerScript(editedScript) ? (
+                <>
+                  <EditableChapter
+                    title="I. Business Problem"
+                    value={editedScript.businessProblem}
+                    onChange={(val) => updateChapter('businessProblem', val)}
+                  />
+                  <EditableChapter
+                    title="II. User Journey"
+                    value={editedScript.userJourney}
+                    onChange={(val) => updateChapter('userJourney', val)}
+                  />
+                  <EditableChapter
+                    title="III. Pragmatic Architecture"
+                    value={editedScript.pragmaticArchitecture}
+                    onChange={(val) => updateChapter('pragmaticArchitecture', val)}
+                  />
+                  <EditableChapter
+                    title="IV. Trade-off & Execution"
+                    value={editedScript.tradeoffExecution}
+                    onChange={(val) => updateChapter('tradeoffExecution', val)}
+                  />
+                  <EditableChapter
+                    title="V. Impact & Roadmap"
+                    value={editedScript.impactRoadmap}
+                    onChange={(val) => updateChapter('impactRoadmap', val)}
+                  />
+                </>
+              ) : isUserJourneyScript(editedScript) ? (
                 <>
                   <EditableChapter
                     title="💥 CHAPTER 1: THE FRICTION (45-60 seconds)"

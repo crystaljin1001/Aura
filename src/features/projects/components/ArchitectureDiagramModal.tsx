@@ -10,13 +10,15 @@ interface ArchitectureDiagramModalProps {
   project: Project
   isOpen: boolean
   onClose: () => void
+  onOpenDecisionForm?: () => void
 }
 
-export function ArchitectureDiagramModal({ project, isOpen, onClose }: ArchitectureDiagramModalProps) {
+export function ArchitectureDiagramModal({ project, isOpen, onClose, onOpenDecisionForm }: ArchitectureDiagramModalProps) {
   const [architectureDiagram, setArchitectureDiagram] = useState<{ mermaidCode: string; type: string } | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [instruction, setInstruction] = useState('')
+  const [isSaved, setIsSaved] = useState(false)
 
   // Load existing diagram when modal opens
   useEffect(() => {
@@ -29,12 +31,14 @@ export function ArchitectureDiagramModal({ project, isOpen, onClose }: Architect
     const diagram = await getArchitectureDiagram(project.id)
     if (diagram) {
       setArchitectureDiagram(diagram)
+      setIsSaved(true) // Existing diagrams are already saved
     }
   }
 
   const handleGenerate = async () => {
     setIsGenerating(true)
     setError(null)
+    setIsSaved(false) // Mark as unsaved when regenerating
 
     try {
       const result = await generateAndSaveArchitectureDiagram(project.id, instruction || undefined)
@@ -42,6 +46,7 @@ export function ArchitectureDiagramModal({ project, isOpen, onClose }: Architect
       if (result.success && result.data) {
         setArchitectureDiagram(result.data)
         setInstruction('') // Clear instruction after successful generation
+        // Note: Don't auto-save here, user needs to explicitly save
       } else {
         setError(result.error || 'Failed to generate diagram')
       }
@@ -50,6 +55,10 @@ export function ArchitectureDiagramModal({ project, isOpen, onClose }: Architect
     } finally {
       setIsGenerating(false)
     }
+  }
+
+  const handleConfirm = () => {
+    setIsSaved(true)
   }
 
   const handleClose = () => {
@@ -63,6 +72,7 @@ export function ArchitectureDiagramModal({ project, isOpen, onClose }: Architect
 
     setInstruction('')
     setError(null)
+    setIsSaved(false) // Reset saved state when closing
     onClose()
   }
 
@@ -143,17 +153,64 @@ export function ArchitectureDiagramModal({ project, isOpen, onClose }: Architect
                   <p className="text-sm text-red-400">{error}</p>
                 )}
               </div>
+
+              {/* CTA: Add Technical Decisions (only show after save) */}
+              {isSaved && (
+                <div className="rounded-lg border border-blue-500/30 bg-blue-500/5 p-4 mt-6">
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">🌳</div>
+                    <div className="flex-1">
+                      <h4 className="text-sm font-semibold text-foreground mb-1">
+                        Next: Add Your Technical Decisions
+                      </h4>
+                      <p className="text-xs text-muted-foreground mb-3">
+                        Explain your architectural trade-offs with decision trees. Show what alternatives you considered and why you chose this approach.
+                      </p>
+                      <button
+                        onClick={() => {
+                          handleClose()
+                          onOpenDecisionForm?.()
+                        }}
+                        className="inline-flex items-center gap-2 px-3 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                      >
+                        <span>Add Decision Trees</span>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           {/* Action Buttons */}
           <div className="flex justify-end gap-3 pt-4 border-t border-gray-700">
-            <button
-              onClick={handleClose}
-              className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
-            >
-              Close
-            </button>
+            {architectureDiagram && !isSaved && (
+              <button
+                onClick={handleConfirm}
+                className="px-6 py-2 text-sm bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium"
+              >
+                ✓ Looks Good - Continue
+              </button>
+            )}
+            {architectureDiagram && isSaved && (
+              <button
+                onClick={handleClose}
+                className="px-6 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              >
+                Done
+              </button>
+            )}
+            {!architectureDiagram && (
+              <button
+                onClick={handleClose}
+                className="px-4 py-2 text-sm bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+              >
+                Close
+              </button>
+            )}
           </div>
         </div>
       </DialogContent>

@@ -83,7 +83,7 @@ export function VideoUploadModal({ project, isOpen, onClose }: VideoUploadModalP
       try {
         await saveProjectVideo(project.repository, videoUrl, thumbnailUrl || undefined)
         onClose()
-        router.refresh()
+        router.push(`/portfolio/${project.repository.replace('/', '-')}`)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to save video')
       }
@@ -119,7 +119,7 @@ export function VideoUploadModal({ project, isOpen, onClose }: VideoUploadModalP
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Record Video Demo</DialogTitle>
           <DialogDescription>
