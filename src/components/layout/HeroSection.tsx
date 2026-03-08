@@ -2,17 +2,17 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowDown, Download, Github, Linkedin, Twitter, Star, Package } from 'lucide-react';
-import { decodeHtmlEntities } from '@/lib/utils/html';
-import type { UserProfile } from '@/features/user-profile/types';
+import { ArrowRight, ArrowDown, Download, Github, Linkedin, Twitter, Star, Package, Building2, Layers, MapPin } from 'lucide-react';
+import type { UserProfile, AboutSectionData } from '@/features/user-profile/types';
 
 interface HeroSectionProps {
   profile: UserProfile | null;
   githubStars: number;
   productsShipped: number;
+  aboutData?: AboutSectionData | null;
 }
 
-export function HeroSection({ profile, githubStars, productsShipped }: HeroSectionProps) {
+export function HeroSection({ profile, githubStars, productsShipped, aboutData }: HeroSectionProps) {
   const titles = ['Product Engineer', 'Full-Stack Builder', 'Open Source Creator', 'Solo Founder'];
   const [currentTitle, setCurrentTitle] = useState(0);
   const [visible, setVisible] = useState(false);
@@ -31,7 +31,6 @@ export function HeroSection({ profile, githubStars, productsShipped }: HeroSecti
 
   const displayName = profile?.fullName || 'Your Name';
   const firstName = displayName.split(' ')[0];
-  const bio = profile?.bio || 'I build products that solve real problems. From concept to deployment, I ship fast and iterate faster.';
   const avatarUrl = profile?.avatarUrl;
   const initials = displayName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
 
@@ -45,6 +44,44 @@ export function HeroSection({ profile, githubStars, productsShipped }: HeroSecti
       : 'Not currently looking';
 
   const formatNumber = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n));
+
+  // ── Derive 3 hero bullets from about data ──────────────────────
+  const latestJob = aboutData?.experience?.[0];
+  const topSkills = aboutData?.skills?.flatMap((g) => g.items).slice(0, 4) ?? [];
+
+  const bullets: { icon: React.ReactNode; text: string }[] = [];
+
+  if (latestJob) {
+    bullets.push({
+      icon: <Building2 className="w-3.5 h-3.5 text-blue-400 shrink-0 mt-0.5" />,
+      text: `${latestJob.role} @ ${latestJob.company}`,
+    });
+  }
+  if (topSkills.length > 0) {
+    bullets.push({
+      icon: <Layers className="w-3.5 h-3.5 text-cyan-400 shrink-0 mt-0.5" />,
+      text: topSkills.join(' · '),
+    });
+  }
+  if (profile?.location || aboutData?.location) {
+    const loc = profile?.location || aboutData?.location || '';
+    const status = availabilityText;
+    bullets.push({
+      icon: <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />,
+      text: loc ? `${loc} · ${status}` : status,
+    });
+  }
+
+  // Fallback if no about data yet — split bio into bullet points
+  if (bullets.length === 0) {
+    const bio = profile?.bio || 'Building products that solve real problems. Shipping fast and iterating faster. Focused on developer tools and AI.';
+    bio.split(/\.\s+/).filter(Boolean).slice(0, 3).forEach((sentence) => {
+      bullets.push({
+        icon: <span className="w-1 h-1 rounded-full bg-muted-foreground shrink-0 mt-2" />,
+        text: sentence.replace(/\.$/, ''),
+      });
+    });
+  }
 
   return (
     <section className="min-h-screen flex items-center pt-20 pb-16 px-4">
@@ -83,10 +120,15 @@ export function HeroSection({ profile, githubStars, productsShipped }: HeroSecti
               </p>
             </div>
 
-            {/* Bio */}
-            <p className="text-base text-muted-foreground leading-relaxed max-w-md whitespace-pre-wrap">
-              {decodeHtmlEntities(bio)}
-            </p>
+            {/* Bullet highlights */}
+            <ul className="space-y-2.5">
+              {bullets.map((b, i) => (
+                <li key={i} className="flex items-start gap-2.5 text-sm text-muted-foreground">
+                  {b.icon}
+                  <span className="leading-snug">{b.text}</span>
+                </li>
+              ))}
+            </ul>
 
             {/* CTA buttons */}
             <div className="flex flex-wrap gap-3 pt-2">

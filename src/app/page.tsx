@@ -126,6 +126,7 @@ export default async function Home() {
           profile={profile}
           githubStars={githubStars}
           productsShipped={productsShipped}
+          aboutData={aboutData}
         />
         <div id="products">
           <QuickPeek />
