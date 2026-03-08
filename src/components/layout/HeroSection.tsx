@@ -47,7 +47,10 @@ export function HeroSection({ profile, githubStars, productsShipped, aboutData }
 
   // ── Derive 3 hero bullets from about data ──────────────────────
   const latestJob = aboutData?.experience?.[0];
-  const topSkills = aboutData?.skills?.flatMap((g) => g.items).slice(0, 4) ?? [];
+  const aiSkillGroup = aboutData?.skills?.find((g) =>
+    /ai|ml|machine|llm|agent/i.test(g.category)
+  );
+  const topSkills = (aiSkillGroup?.items ?? aboutData?.skills?.flatMap((g) => g.items) ?? []).slice(0, 4);
 
   const bullets: { icon: React.ReactNode; text: string }[] = [];
 
