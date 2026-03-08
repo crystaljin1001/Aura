@@ -66,7 +66,7 @@ export async function getSoloProjects(): Promise<SoloProject[]> {
       .from('user_repositories')
       .select('repo_owner, repo_name')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
+      .order('added_at', { ascending: false })
 
     if (!repos || repos.length === 0) return []
 
