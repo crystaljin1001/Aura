@@ -9,7 +9,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
-import type { AboutSectionData } from '../types'
+import type { AboutSectionData, SoloProject } from '../types'
 import type { ApiResponse } from '@/types'
 
 const anthropic = new Anthropic({
@@ -55,8 +55,6 @@ export async function getAboutSection(): Promise<AboutSectionData | null> {
 /* ------------------------------------------------------------------ */
 /*  Solo Projects                                                      */
 /* ------------------------------------------------------------------ */
-
-import type { SoloProject } from '../types'
 
 export async function getSoloProjects(): Promise<SoloProject[]> {
   try {
