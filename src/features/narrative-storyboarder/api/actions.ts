@@ -5,7 +5,7 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import { getOpenAIClient, NARRATIVE_SYSTEM_PROMPT, USER_JOURNEY_SYSTEM_PROMPT, TECHNICAL_ARCHITECTURE_SYSTEM_PROMPT } from '@/lib/ai/openai';
+import { getOpenAIClient, NARRATIVE_SYSTEM_PROMPT, USER_JOURNEY_SYSTEM_PROMPT, TECHNICAL_ARCHITECTURE_SYSTEM_PROMPT, PRODUCT_MINDED_ENGINEER_SYSTEM_PROMPT } from '@/lib/ai/openai';
 import { AuthenticationError, ValidationError } from '@/utils/errors';
 import type { ApiResponse } from '@/types';
 import type { NarrativeScript, GeneratedScript, ScriptType, UserJourneyScript, TechnicalArchitectureScript, LegacyNarrativeScript } from '../types';
@@ -188,6 +188,83 @@ export async function generateScript(
 
       userPrompt = `Project: ${validated.projectName}\n\nREADME:\n${validated.readmeContent}${technicalContext}\n\nGenerate a Technical Architecture Demo script following the Context → Logic Gate → Execution → Moat narrative structure. Focus on technical decisions, trade-offs, and architectural depth. Include visual cues and intent-based transitions.\n\nIMPORTANT: Reference the Logic Map data and commit history above. Use specific examples from the technical decisions, pivot points, and commit messages. This is REAL data from the project - cite it!`;
       expectedFields = ['context', 'logicGate', 'execution', 'moat'];
+    } else if (scriptType === 'product_minded_engineer') {
+      systemPrompt = PRODUCT_MINDED_ENGINEER_SYSTEM_PROMPT;
+
+      // Build unified context following the new structure
+      let unifiedContext = '\n\n=== CONTEXT GATHERING ===\n\n';
+
+      // --- USER DECISION TREE (Explicit Trade-offs) ---
+      unifiedContext += '--- USER DECISION TREE (Explicit Trade-offs) ---\n';
+      if (logicMapData && logicMapData.hasLogicMap && logicMapData.decisions.length > 0) {
+        unifiedContext += 'The user has provided explicit architectural decisions. Use these as the SOURCE OF TRUTH for Chapter IV.\n\n';
+        logicMapData.decisions.forEach((decision, idx) => {
+          unifiedContext += `Decision ${idx + 1}: ${decision.technology}\n`;
+          unifiedContext += `  Problem: ${decision.problem}\n`;
+
+          if (decision.alternativesConsidered && decision.alternativesConsidered.length > 0) {
+            unifiedContext += `  Alternatives Considered:\n`;
+            decision.alternativesConsidered.forEach(alt => {
+              unifiedContext += `    - ${alt.name}\n`;
+              if (alt.whyRejected) {
+                unifiedContext += `      WHY NOT: ${alt.whyRejected}\n`;
+              }
+            });
+          }
+
+          unifiedContext += `  Chosen Solution: ${decision.chosenSolution.name}\n`;
+          unifiedContext += `    WHY THIS: ${decision.chosenSolution.rationale}\n`;
+
+          if (decision.chosenSolution.tradeoffsAccepted && decision.chosenSolution.tradeoffsAccepted.length > 0) {
+            unifiedContext += `    Trade-offs Accepted: ${decision.chosenSolution.tradeoffsAccepted.join(', ')}\n`;
+          }
+
+          if (decision.chosenSolution.evidenceLink) {
+            unifiedContext += `    Proof of Execution: ${decision.chosenSolution.evidenceLink}\n`;
+          }
+
+          unifiedContext += '\n';
+        });
+      } else {
+        unifiedContext += 'None provided. Infer trade-offs from GitHub code and commit history below.\n\n';
+      }
+
+      // --- GITHUB HERO CODE & COMMITS (Proof of Execution) ---
+      unifiedContext += '--- GITHUB HERO CODE & COMMITS (Proof of Execution) ---\n';
+      if (commitHistory) {
+        unifiedContext += `Total commits: ${commitHistory.totalCommits}\n`;
+        unifiedContext += `Commit frequency: ${commitHistory.complexityMetrics.commitFrequency}\n`;
+        unifiedContext += `Average files per commit: ~${commitHistory.complexityMetrics.averageFilesPerCommit}\n`;
+
+        if (commitHistory.complexityMetrics.largestCommit) {
+          const commit = commitHistory.complexityMetrics.largestCommit;
+          unifiedContext += `\nMost Complex Commit (Hero Commit Candidate):\n`;
+          unifiedContext += `  SHA: ${commit.sha.substring(0, 7)}\n`;
+          unifiedContext += `  Message: "${commit.message}"\n`;
+          unifiedContext += `  Author: ${commit.author}\n`;
+          unifiedContext += `  Date: ${new Date(commit.date).toLocaleDateString()}\n`;
+        }
+
+        if (commitHistory.recentCommits && commitHistory.recentCommits.length > 0) {
+          unifiedContext += `\nRecent Meaningful Commits (for Chapter IV reference):\n`;
+          commitHistory.recentCommits.slice(0, 5).forEach(c => {
+            unifiedContext += `  - "${c.message}" (${new Date(c.date).toLocaleDateString()})\n`;
+          });
+        }
+      } else {
+        unifiedContext += 'No commit history available. Infer from README and package.json.\n';
+      }
+
+      userPrompt = `Project: ${validated.projectName}\n\nREADME:\n${validated.readmeContent}${unifiedContext}\n\nGenerate a 3-minute Master Demo script following the five-chapter framework:
+
+Chapter I (0:00-0:30): The Business Problem - Define the user pain point and business cost. NO code/architecture yet.
+Chapter II (0:30-1:30): The User Journey - Walk through the "Aha!" moment. Show the product in action, the workflow, the UX.
+Chapter III (1:30-2:00): Pragmatic Architecture - How the pieces fit together. Explain stack choices and trade-offs.
+Chapter IV (2:00-2:30): Trade-off & Execution - **CRITICAL**: If [USER DECISION TREE] has data, focus heavily on those explicit choices and reference the GitHub code as proof. If empty, infer the most complex challenge from commits and explain the trade-off.
+Chapter V (2:30-3:00): Impact & Roadmap - Hard metrics (commits, APIs, performance) and next steps.
+
+CRITICAL: Follow the Steve Jobs pitch flow: Problem → Solution Demo → How We Built It → Technical Depth → Results.`;
+      expectedFields = ['businessProblem', 'userJourney', 'pragmaticArchitecture', 'tradeoffExecution', 'impactRoadmap'];
     } else {
       // Fallback to legacy format
       systemPrompt = NARRATIVE_SYSTEM_PROMPT;
@@ -210,7 +287,7 @@ export async function generateScript(
       ],
       response_format: { type: 'json_object' },
       temperature: 0.7,
-      max_tokens: 3000, // Increased for more detailed scripts
+      max_tokens: 4000, // Increased to prevent truncation
     });
 
     // Parse the response
@@ -220,7 +297,19 @@ export async function generateScript(
       throw new Error('No response from AI');
     }
 
-    const parsedScript = JSON.parse(responseContent) as NarrativeScript;
+    // Try to parse JSON with better error handling
+    let parsedScript: NarrativeScript;
+    try {
+      parsedScript = JSON.parse(responseContent) as NarrativeScript;
+    } catch (parseError) {
+      console.error('[generateScript] JSON parse error:', parseError);
+      console.error('[generateScript] Raw response (first 500 chars):', responseContent.substring(0, 500));
+      console.error('[generateScript] Raw response (last 500 chars):', responseContent.substring(responseContent.length - 500));
+
+      throw new Error(
+        'AI generated invalid script format. This usually happens with very long READMEs. Try regenerating or use a shorter README.'
+      );
+    }
 
     // Validate the script structure based on type
     const missingFields = expectedFields.filter(field => !(field in parsedScript));
