@@ -66,10 +66,10 @@ export function HeroSection({ profile, githubStars, productsShipped, aboutData }
       text: topSkills.join(' · '),
     });
   }
-  const passionSource = aboutData?.headlineHighlight
-    || aboutData?.bio?.[0]?.split(/[.!]/)[0]?.replace(/^I('m| am)?\s+/i, '').trim()
-    || 'building AI infra';
-  const passionText = `Passion for ${passionSource.replace(/\.$/, '').toLowerCase()}`;
+  const rawPassion = (profile?.bio || '').replace(/\.$/, '').trim();
+  const passionText = rawPassion
+    ? (/^passion/i.test(rawPassion) ? rawPassion : `Passion for ${rawPassion}`)
+    : 'Passion for building AI products';
   bullets.push({
     icon: <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />,
     text: passionText,

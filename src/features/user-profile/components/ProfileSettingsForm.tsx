@@ -153,17 +153,17 @@ export function ProfileSettingsForm({
           </div>
 
           <div>
-            <label className="block text-sm font-semibold mb-2">Bio</label>
+            <label className="block text-sm font-semibold mb-2">Passionate for</label>
             <textarea
               value={bio}
               onChange={(e) => setBio(e.target.value)}
-              placeholder="Tell us about your work, interests, and what you're passionate about..."
+              placeholder="e.g. building AI products, scaling developer tools, agentic systems..."
               maxLength={500}
-              rows={4}
+              rows={2}
               className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-accent focus:border-accent resize-none"
             />
             <p className="text-xs text-muted-foreground mt-2">
-              {bio.length}/500 characters
+              Shown as &ldquo;Passion for {bio || '…'}&rdquo; on your portfolio · {bio.length}/500
             </p>
           </div>
 
