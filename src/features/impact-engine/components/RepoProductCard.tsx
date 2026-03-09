@@ -8,6 +8,7 @@ import { cn } from '@/utils/cn';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Code2, Eye, Github, Star, GitFork, Users, Sparkles, CheckCircle2, Play } from 'lucide-react';
+import { SharePortfolioButton } from '@/components/ui/SharePortfolioButton';
 import { decodeHtmlEntities } from '@/lib/utils/html';
 
 /* ------------------------------------------------------------------ */
@@ -195,13 +196,13 @@ export function RepoProductCard({ product, featured = false }: RepoProductCardPr
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3">
+          <div className="flex gap-3 flex-wrap items-center">
             <Button
               size="lg"
               className="bg-foreground text-background hover:bg-foreground/90"
               asChild
             >
-              <a href={`/portfolio/${owner}-${repo}`}>
+              <a href={`/p/${owner}-${repo}`}>
                 <Eye className="w-4 h-4 mr-2" />
                 View Full Case Study
               </a>
@@ -221,6 +222,10 @@ export function RepoProductCard({ product, featured = false }: RepoProductCardPr
                 View Code
               </a>
             </Button>
+            <SharePortfolioButton
+              url={`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/p/${owner}-${repo}`}
+              label="Share"
+            />
           </div>
         </div>
       </div>
