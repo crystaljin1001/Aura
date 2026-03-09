@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ArrowDown, Download, Github, Linkedin, Twitter, Star, Package, Building2, Layers, MapPin } from 'lucide-react';
+import { ArrowRight, ArrowDown, Download, Github, Linkedin, Twitter, Star, Package, Building2, Layers, Sparkles } from 'lucide-react';
 import type { UserProfile, AboutSectionData } from '@/features/user-profile/types';
 
 interface HeroSectionProps {
@@ -66,12 +66,13 @@ export function HeroSection({ profile, githubStars, productsShipped, aboutData }
       text: topSkills.join(' · '),
     });
   }
-  if (profile?.location || aboutData?.location) {
-    const loc = profile?.location || aboutData?.location || '';
-    const status = availabilityText;
+  const passionText = aboutData?.bio?.[0] || profile?.bio?.split(/\.\s+/)[0] || '';
+  if (passionText) {
+    const clean = passionText.replace(/\.$/, '');
+    const text = /^passion/i.test(clean) ? clean : `Passion for ${clean.replace(/^I (build|create|develop|make|love|enjoy|focus|specialize|work)/i, (_, v) => v.toLowerCase())}`;
     bullets.push({
-      icon: <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0 mt-0.5" />,
-      text: loc ? `${loc} · ${status}` : status,
+      icon: <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />,
+      text,
     });
   }
 
