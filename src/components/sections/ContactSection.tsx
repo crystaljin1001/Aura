@@ -1,79 +1,119 @@
-import { ArrowRight, Github, Linkedin, Twitter, Mail } from 'lucide-react';
+import { ArrowUpRight, Github, Linkedin, Twitter, Mail } from 'lucide-react';
 import Link from 'next/link';
+import type { UserProfile } from '@/features/user-profile/types';
 
-export function ContactSection() {
+interface ContactSectionProps {
+  profile?: UserProfile | null;
+}
+
+export function ContactSection({ profile }: ContactSectionProps) {
+  const links = [
+    profile?.githubUsername && {
+      icon: Github,
+      label: 'GitHub',
+      handle: `@${profile.githubUsername}`,
+      href: `https://github.com/${profile.githubUsername}`,
+      color: 'group-hover:text-white',
+      bg: 'group-hover:bg-white/10',
+    },
+    profile?.linkedinUrl && {
+      icon: Linkedin,
+      label: 'LinkedIn',
+      handle: profile.linkedinUrl.replace(/^https?:\/\/(www\.)?linkedin\.com\/in\//, '').replace(/\/$/, ''),
+      href: profile.linkedinUrl,
+      color: 'group-hover:text-blue-400',
+      bg: 'group-hover:bg-blue-500/10',
+    },
+    profile?.twitterUsername && {
+      icon: Twitter,
+      label: 'Twitter',
+      handle: `@${profile.twitterUsername}`,
+      href: `https://twitter.com/${profile.twitterUsername}`,
+      color: 'group-hover:text-sky-400',
+      bg: 'group-hover:bg-sky-500/10',
+    },
+  ].filter(Boolean) as {
+    icon: React.ElementType;
+    label: string;
+    handle: string;
+    href: string;
+    color: string;
+    bg: string;
+  }[];
+
   return (
     <section id="contact" className="py-28 px-4 relative">
-      {/* Subtle section separator */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-px h-16 bg-gradient-to-b from-transparent via-border to-transparent" />
 
-      <div className="max-w-3xl mx-auto">
-        <div className="glass-card-glow rounded-3xl p-12 md:p-16 text-center relative overflow-hidden">
-          {/* Background gradient accent */}
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-cyan-500/5 pointer-events-none" />
+      <div className="max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
 
-          <div className="relative">
-            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-4">
-              Get in Touch
+          {/* ── Left: Copy ── */}
+          <div>
+            <p className="text-xs font-mono uppercase tracking-widest text-muted-foreground mb-5">
+              Contact
             </p>
-
-            <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground mb-5 leading-tight">
-              Let&apos;s build something{' '}
-              <span className="gradient-text">together</span>
+            <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground leading-[1.1] mb-6">
+              Open to{' '}
+              <span className="gradient-text">new roles</span>
+              <br />& collaborations
             </h2>
-
-            <p className="text-base text-muted-foreground mb-10 max-w-md mx-auto leading-relaxed">
-              Open to new opportunities, collaborations, and interesting conversations.
-              Reach out — I respond to every message.
+            <p className="text-base text-muted-foreground leading-relaxed mb-8 max-w-sm">
+              Whether it&apos;s a full-time role, contract, or an interesting project — let&apos;s talk.
             </p>
+            <Link
+              href="/auth"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors group"
+            >
+              <Mail className="w-4 h-4" />
+              Send a Message
+              <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+            </Link>
+          </div>
 
-            {/* Primary CTA */}
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
+          {/* ── Right: Contact method cards ── */}
+          <div className="space-y-3">
+            {links.map(({ icon: Icon, label, handle, href, color, bg }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`group flex items-center justify-between px-5 py-4 rounded-2xl border border-border hover:border-white/20 transition-all duration-200 ${bg}`}
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl bg-secondary/60 flex items-center justify-center transition-colors ${bg}`}>
+                    <Icon className={`w-5 h-5 text-muted-foreground transition-colors ${color}`} />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium mb-0.5">{label}</p>
+                    <p className={`text-sm font-semibold text-foreground transition-colors ${color}`}>{handle}</p>
+                  </div>
+                </div>
+                <ArrowUpRight className={`w-4 h-4 text-muted-foreground/40 transition-all ${color} group-hover:translate-x-0.5 group-hover:-translate-y-0.5`} />
+              </a>
+            ))}
+
+            {/* Email fallback if no social links */}
+            {links.length === 0 && (
               <Link
                 href="/auth"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-foreground text-background text-sm font-semibold hover:bg-foreground/90 transition-colors group"
+                className="group flex items-center justify-between px-5 py-4 rounded-2xl border border-border hover:border-white/20 transition-all"
               >
-                <Mail className="w-4 h-4" />
-                Send a Message
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-secondary/60 flex items-center justify-center">
+                    <Mail className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                  <div>
+                    <p className="text-xs text-muted-foreground font-medium mb-0.5">Email</p>
+                    <p className="text-sm font-semibold text-foreground">Get in touch</p>
+                  </div>
+                </div>
+                <ArrowUpRight className="w-4 h-4 text-muted-foreground/40" />
               </Link>
-            </div>
-
-            {/* Divider */}
-            <div className="flex items-center gap-4 mb-8">
-              <div className="flex-1 h-px bg-border" />
-              <span className="text-xs text-muted-foreground/50 font-mono">or find me on</span>
-              <div className="flex-1 h-px bg-border" />
-            </div>
-
-            {/* Social icons */}
-            <div className="flex items-center justify-center gap-3">
-              <a
-                href="https://github.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-11 h-11 rounded-xl glass-card flex items-center justify-center hover:bg-glass-hover transition-colors hover:border-white/20 group"
-              >
-                <Github className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-              </a>
-              <a
-                href="https://linkedin.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-11 h-11 rounded-xl glass-card flex items-center justify-center hover:bg-glass-hover transition-colors hover:border-white/20 group"
-              >
-                <Linkedin className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-              </a>
-              <a
-                href="https://twitter.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-11 h-11 rounded-xl glass-card flex items-center justify-center hover:bg-glass-hover transition-colors hover:border-white/20 group"
-              >
-                <Twitter className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
-              </a>
-            </div>
+            )}
           </div>
+
         </div>
       </div>
     </section>
