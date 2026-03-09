@@ -66,15 +66,14 @@ export function HeroSection({ profile, githubStars, productsShipped, aboutData }
       text: topSkills.join(' · '),
     });
   }
-  const passionText = aboutData?.bio?.[0] || profile?.bio?.split(/\.\s+/)[0] || '';
-  if (passionText) {
-    const clean = passionText.replace(/\.$/, '');
-    const text = /^passion/i.test(clean) ? clean : `Passion for ${clean.replace(/^I (build|create|develop|make|love|enjoy|focus|specialize|work)/i, (_, v) => v.toLowerCase())}`;
-    bullets.push({
-      icon: <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />,
-      text,
-    });
-  }
+  const rawBio = aboutData?.bio?.[0] || profile?.bio || '';
+  const passionText = rawBio
+    ? 'Passion for ' + rawBio.replace(/^I('m| am)?\s+/i, '').replace(/\.$/, '').toLowerCase()
+    : 'Passion for building AI infra';
+  bullets.push({
+    icon: <Sparkles className="w-3.5 h-3.5 text-purple-400 shrink-0 mt-0.5" />,
+    text: passionText,
+  });
 
   // Fallback if no about data yet — split bio into bullet points
   if (bullets.length === 0) {
