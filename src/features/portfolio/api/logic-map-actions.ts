@@ -242,6 +242,90 @@ export async function getPivotPoints(
 }
 
 /**
+ * Get Logic Map data for script generation
+ * Returns both technical decisions and pivot points if they exist
+ */
+export async function getLogicMapForScriptGeneration(
+  repositoryUrl: string
+): Promise<ApiResponse<LogicMapData | null>> {
+  try {
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return { success: false, error: 'Unauthorized' }
+    }
+
+    // Fetch technical journey with decisions
+    const { data: journey, error: journeyError } = await supabase
+      .from('project_technical_journey')
+      .select('tech_decisions_enhanced, logic_map_enabled')
+      .eq('user_id', user.id)
+      .eq('repository_url', repositoryUrl)
+      .maybeSingle()
+
+    if (journeyError) {
+      console.error('Error fetching journey:', journeyError)
+      return { success: false, error: 'Failed to fetch technical journey' }
+    }
+
+    // If no journey or Logic Map not enabled, return null
+    if (!journey || !journey.logic_map_enabled) {
+      return { success: true, data: null }
+    }
+
+    // Fetch pivot points
+    const { data: pivots, error: pivotsError } = await supabase
+      .from('project_pivot_points')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('repository_url', repositoryUrl)
+      .order('sequence_order', { ascending: true })
+
+    if (pivotsError) {
+      console.error('Error fetching pivot points:', pivotsError)
+      // Continue without pivot points
+    }
+
+    const decisions = (journey.tech_decisions_enhanced as TechDecisionNode[]) || []
+    const pivotPoints = pivots?.map(p => ({
+      id: p.id,
+      challenge: p.challenge,
+      initialApproach: p.initial_approach,
+      pivotReasoning: p.pivot_reasoning,
+      newApproach: p.new_approach,
+      outcome: p.outcome,
+      impactMetric: p.impact_metric,
+      evidenceLink: p.evidence_link,
+      commitSha: p.commit_sha,
+      pivotDate: p.pivot_date,
+      sequenceOrder: p.sequence_order,
+    })) || []
+
+    return {
+      success: true,
+      data: {
+        decisions,
+        pivotPoints,
+        hasLogicMap: decisions.length > 0 || pivotPoints.length > 0,
+      },
+    }
+  } catch (error) {
+    console.error('Error in getLogicMapForScriptGeneration:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to fetch Logic Map data',
+    }
+  }
+}
+
+export interface LogicMapData {
+  decisions: TechDecisionNode[]
+  pivotPoints: PivotPoint[]
+  hasLogicMap: boolean
+}
+
+/**
  * Delete a pivot point
  */
 export async function deletePivotPoint(

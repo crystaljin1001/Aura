@@ -8,9 +8,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { getProjectScripts } from '../actions'
+import { getProjectScripts, deleteScript } from '../actions'
 import type { Project } from '../types'
-import { isUserJourneyScript, isTechnicalArchitectureScript, isLegacyScript } from '@/features/narrative-storyboarder/types'
+import { isUserJourneyScript, isTechnicalArchitectureScript, isLegacyScript, isProductMindedEngineerScript } from '@/features/narrative-storyboarder/types'
 import type { NarrativeScript, ScriptType } from '@/features/narrative-storyboarder/types'
 
 interface ViewScriptModalProps {
@@ -33,6 +33,7 @@ export function ViewScriptModal({ project, isOpen, onClose }: ViewScriptModalPro
   const [isLoading, setIsLoading] = useState(true)
   const [copied, setCopied] = useState(false)
   const [selectedScriptType, setSelectedScriptType] = useState<ScriptType | 'legacy' | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
 
   useEffect(() => {
     if (isOpen) {
@@ -55,12 +56,16 @@ export function ViewScriptModal({ project, isOpen, onClose }: ViewScriptModalPro
       })
       setScripts(data)
 
-      // Auto-select first non-legacy script (prefer User Journey, then Technical Architecture)
+      // Auto-select first non-legacy script (prefer Product-Minded Engineer, then User Journey, then Technical Architecture)
       if (data.length > 0) {
+        const productMinded = data.find(s => s.script_type === 'product_minded_engineer')
         const userJourney = data.find(s => s.script_type === 'user_journey')
         const technical = data.find(s => s.script_type === 'technical_architecture')
 
-        if (userJourney) {
+        if (productMinded) {
+          setSelectedScriptType('product_minded_engineer')
+          console.log('[ViewScriptModal] Auto-selected script type: product_minded_engineer')
+        } else if (userJourney) {
           setSelectedScriptType('user_journey')
           console.log('[ViewScriptModal] Auto-selected script type: user_journey')
         } else if (technical) {
@@ -78,6 +83,28 @@ export function ViewScriptModal({ project, isOpen, onClose }: ViewScriptModalPro
   const selectedScript = scripts.find(s =>
     s.script_type === selectedScriptType || (!s.script_type && selectedScriptType === 'legacy')
   )
+
+  async function handleDeleteScript(scriptId: string) {
+    if (!confirm('Are you sure you want to delete this script? This action cannot be undone.')) {
+      return
+    }
+
+    setIsDeleting(true)
+    try {
+      await deleteScript(scriptId)
+      // Reload scripts after deletion
+      await loadScripts()
+      // If we deleted the currently selected script, reset selection
+      if (selectedScript?.id === scriptId) {
+        setSelectedScriptType(null)
+      }
+    } catch (error) {
+      console.error('Error deleting script:', error)
+      alert('Failed to delete script. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   function handleCopyScript() {
     if (!selectedScript || !selectedScript.generated_script) return
@@ -99,6 +126,24 @@ ${generatedScript.discovery}
 
 ## 🛡️ CHAPTER 4: THE RESOLUTION (30-45 seconds)
 ${generatedScript.resolution}
+`
+    } else if (isProductMindedEngineerScript(generatedScript)) {
+      fullScript = `# ${selectedScript.project_name} - Master Demo Script
+
+## 💼 CHAPTER I: THE BUSINESS PROBLEM (0:00-0:30)
+${generatedScript.businessProblem}
+
+## 🎯 CHAPTER II: THE USER JOURNEY (0:30-1:30)
+${generatedScript.userJourney}
+
+## 🏗️ CHAPTER III: PRAGMATIC ARCHITECTURE (1:30-2:00)
+${generatedScript.pragmaticArchitecture}
+
+## ⚖️ CHAPTER IV: THE TRADE-OFF & EXECUTION (2:00-2:30)
+${generatedScript.tradeoffExecution}
+
+## 📊 CHAPTER V: THE IMPACT & ROADMAP (2:30-3:00)
+${generatedScript.impactRoadmap}
 `
     } else if (isTechnicalArchitectureScript(generatedScript)) {
       fullScript = `# ${selectedScript.project_name} - Technical Architecture Demo Script
@@ -148,12 +193,13 @@ ${generatedScript.outcome}
   }
 
   // Get unique script types for tabs (exclude legacy scripts)
+  const productMindedScript = scripts.find(s => s.script_type === 'product_minded_engineer')
   const userJourneyScript = scripts.find(s => s.script_type === 'user_journey')
   const technicalScript = scripts.find(s => s.script_type === 'technical_architecture')
   // Don't show legacy scripts in tabs
   // const legacyScript = scripts.find(s => !s.script_type && isLegacyScript(s.generated_script))
 
-  const hasMultipleScripts = (userJourneyScript && technicalScript) || scripts.filter(s => s.script_type).length > 1
+  const hasMultipleScripts = scripts.filter(s => s.script_type).length > 1
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -175,29 +221,71 @@ ${generatedScript.outcome}
             {/* Script Type Tabs - Only show if multiple scripts exist */}
             {hasMultipleScripts && (
               <div className="flex gap-2 border-b border-border pb-2">
+                {productMindedScript && (
+                  <div className="relative group">
+                    <button
+                      onClick={() => setSelectedScriptType('product_minded_engineer')}
+                      className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
+                        selectedScriptType === 'product_minded_engineer'
+                          ? 'bg-green-500/20 text-green-400 border-b-2 border-green-500'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      🎯 Master Demo
+                    </button>
+                    <button
+                      onClick={() => handleDeleteScript(productMindedScript.id)}
+                      disabled={isDeleting}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 hover:bg-red-600 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 flex items-center justify-center"
+                      title="Delete this script"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
                 {userJourneyScript && (
-                  <button
-                    onClick={() => setSelectedScriptType('user_journey')}
-                    className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-                      selectedScriptType === 'user_journey'
-                        ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    📖 User Journey
-                  </button>
+                  <div className="relative group">
+                    <button
+                      onClick={() => setSelectedScriptType('user_journey')}
+                      className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
+                        selectedScriptType === 'user_journey'
+                          ? 'bg-blue-500/20 text-blue-400 border-b-2 border-blue-500'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      📖 User Journey
+                    </button>
+                    <button
+                      onClick={() => handleDeleteScript(userJourneyScript.id)}
+                      disabled={isDeleting}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 hover:bg-red-600 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 flex items-center justify-center"
+                      title="Delete this script"
+                    >
+                      ×
+                    </button>
+                  </div>
                 )}
                 {technicalScript && (
-                  <button
-                    onClick={() => setSelectedScriptType('technical_architecture')}
-                    className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
-                      selectedScriptType === 'technical_architecture'
-                        ? 'bg-purple-500/20 text-purple-400 border-b-2 border-purple-500'
-                        : 'text-muted-foreground hover:text-foreground'
-                    }`}
-                  >
-                    🏗️ Technical Architecture
-                  </button>
+                  <div className="relative group">
+                    <button
+                      onClick={() => setSelectedScriptType('technical_architecture')}
+                      className={`px-4 py-2 rounded-t-lg font-medium transition-colors ${
+                        selectedScriptType === 'technical_architecture'
+                          ? 'bg-purple-500/20 text-purple-400 border-b-2 border-purple-500'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                    >
+                      🏗️ Technical Architecture
+                    </button>
+                    <button
+                      onClick={() => handleDeleteScript(technicalScript.id)}
+                      disabled={isDeleting}
+                      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 hover:bg-red-600 text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity disabled:opacity-50 flex items-center justify-center"
+                      title="Delete this script"
+                    >
+                      ×
+                    </button>
+                  </div>
                 )}
               </div>
             )}
@@ -216,7 +304,30 @@ ${generatedScript.outcome}
                 </div>
 
                 {/* Script Sections - Render based on type */}
-                {isUserJourneyScript(selectedScript.generated_script) ? (
+                {isProductMindedEngineerScript(selectedScript.generated_script) ? (
+                  <div className="space-y-6">
+                    <ScriptSection
+                      title="💼 CHAPTER I: THE BUSINESS PROBLEM (0:00-0:30)"
+                      content={selectedScript.generated_script.businessProblem}
+                    />
+                    <ScriptSection
+                      title="🎯 CHAPTER II: THE USER JOURNEY (0:30-1:30)"
+                      content={selectedScript.generated_script.userJourney}
+                    />
+                    <ScriptSection
+                      title="🏗️ CHAPTER III: PRAGMATIC ARCHITECTURE (1:30-2:00)"
+                      content={selectedScript.generated_script.pragmaticArchitecture}
+                    />
+                    <ScriptSection
+                      title="⚖️ CHAPTER IV: THE TRADE-OFF & EXECUTION (2:00-2:30)"
+                      content={selectedScript.generated_script.tradeoffExecution}
+                    />
+                    <ScriptSection
+                      title="📊 CHAPTER V: THE IMPACT & ROADMAP (2:30-3:00)"
+                      content={selectedScript.generated_script.impactRoadmap}
+                    />
+                  </div>
+                ) : isUserJourneyScript(selectedScript.generated_script) ? (
                   <div className="space-y-6">
                     <ScriptSection
                       title="💥 CHAPTER 1: THE FRICTION (45-60 seconds)"

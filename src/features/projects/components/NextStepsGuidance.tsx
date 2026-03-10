@@ -33,10 +33,9 @@ export function NextStepsGuidance({ projects }: NextStepsGuidanceProps) {
   // Check if user has completed key steps for ALL projects
   const hasAllScripts = projects.every(p => p.hasScript)
   const hasAllVideos = projects.every(p => p.hasVideo)
-  const hasAllDomains = projects.every(p => p.hasDomain)
 
   // If all steps are complete, don't show
-  if (hasAllScripts && hasAllVideos && hasAllDomains) {
+  if (hasAllScripts && hasAllVideos) {
     return null
   }
 
@@ -79,10 +78,10 @@ export function NextStepsGuidance({ projects }: NextStepsGuidanceProps) {
               </div>
               <div>
                 <p className={hasAllScripts ? 'text-muted-foreground line-through' : 'text-foreground font-medium'}>
-                  Generate Demo Scripts
+                  Generate Your Demo Script
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Click <span className="font-semibold">&quot;Convert README&quot;</span> - Aura analyzes your README and generates narration scripts for demo videos
+                  Click <span className="font-semibold">&quot;Convert README&quot;</span> - Create a <strong>Product-Minded Engineer</strong> demo that hooks HR in 10 seconds and impresses technical managers by minute two
                 </p>
               </div>
             </div>
@@ -101,26 +100,7 @@ export function NextStepsGuidance({ projects }: NextStepsGuidanceProps) {
                   Record Your Demo Video
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Click <span className="font-semibold">&quot;Record Video Demo&quot;</span> - Use the generated script to narrate while recording your project in action
-                </p>
-              </div>
-            </div>
-
-            {/* Step 3: Add Domain (Optional) */}
-            <div className="flex items-center gap-3 text-sm">
-              <div className={`w-6 h-6 rounded-full border-2 ${hasAllDomains ? 'bg-green-500 border-green-500' : hasAllVideos ? 'border-blue-500' : 'border-muted'} flex items-center justify-center flex-shrink-0`}>
-                {hasAllDomains ? (
-                  <CheckCircle2 className="w-4 h-4 text-white" />
-                ) : (
-                  <span className={`text-xs font-bold ${hasAllVideos ? 'text-blue-500' : 'text-muted-foreground'}`}>3</span>
-                )}
-              </div>
-              <div>
-                <p className={hasAllDomains ? 'text-muted-foreground line-through' : hasAllVideos ? 'text-foreground font-medium' : 'text-muted-foreground'}>
-                  Add Domain (Optional)
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  Connect your custom domain or generate an aura.io subdomain for your project
+                  Click <span className="font-semibold">&quot;Record Video Demo&quot;</span> - Use Studio Mode to record your unified demo with synchronized script and visuals
                 </p>
               </div>
             </div>

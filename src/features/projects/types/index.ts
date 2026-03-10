@@ -20,6 +20,24 @@ export interface DraftData {
     tldr: boolean
     metrics: boolean[]
   }
+  heroCommit?: HeroCommit
+}
+
+export interface HeroCommit {
+  sha: string
+  message: string
+  date: string
+  author: string
+  url: string
+  stats: {
+    filesChanged: number
+    insertions: number
+    deletions: number
+  }
+  keyFiles: string[]
+  confidence: 'high' | 'medium' | 'low'
+  reasoning: string
+  userApproved?: boolean
 }
 
 export interface Project {

@@ -76,6 +76,148 @@ You will receive:
 - **IMPORTANT: Keep edge labels VERY SHORT (max 10 characters)** - Use concise phrases (e.g., "API" not "API Calls", "Data" not "Data Fetch")
 - Make it readable and professional
 
+**MERMAID DIAGRAM RULES:**
+1. **Use Subgraphs**: Group technologies into logical layers using \`subgraph\` syntax (e.g., "Frontend Application", "Backend Services", "External APIs", "Data Layer")
+   Example:
+   \`\`\`
+   subgraph "Frontend"
+     A[▲ Next.js]
+     B[⚛️ React]
+   end
+   subgraph "Backend"
+     C[🔥 Supabase]
+   end
+   \`\`\`
+
+2. **Use Emojis**: ALWAYS include a relevant emoji inside EVERY node text to make it visually scannable
+   Examples:
+   - A[▲ Next.js] - Frontend framework
+   - B[⚡ Supabase] - Backend/Database
+   - C[🔐 Auth] - Authentication
+   - D[📦 Redis] - Caching
+   - E[🎨 Tailwind] - Styling
+   - F[🔗 API] - API layer
+   - G[💾 PostgreSQL] - Database
+   - H[☁️ Vercel] - Deployment
+   - I[📊 Analytics] - Analytics service
+   - J[🌐 CDN] - Content delivery
+
+3. **Accurate Flow**: Use the correct arrow types for data flow
+   - \`<-->\` (bidirectional arrows) for request/response patterns or two-way data flows
+   - \`-->\` (one-way arrows) for unidirectional triggers, events, or pipelines
+   Example:
+   \`\`\`
+   A[▲ Next.js] <--> B[⚡ Supabase]  (requests and receives data)
+   C[📦 Redis] --> D[💾 Database]    (cache invalidation trigger)
+   \`\`\`
+
+4. **Descriptive Edges**: Label ALL edges with SHORT active verbs (max 10 chars) explaining the exact data/action
+   Examples:
+   - \`A -- "Fetches" --> B\`
+   - \`C -- "Caches" --> D\`
+   - \`E <-- "Returns" --> F\`
+   - \`G -- "Triggers" --> H\`
+   - \`I -- "Stores" --> J\`
+   Keep labels brief but descriptive!
+
+**ARCHITECTURAL LOGIC RULES (SANITY CHECK):**
+Before generating the diagram, verify that arrows follow realistic modern web architecture patterns:
+
+1. **Directional Accuracy**: Ensure arrows represent realistic data flow or dependency in modern web development
+   - Data flows FROM client TO server, server TO database
+   - Responses flow back in the opposite direction
+   - Authentication flows: Client → Auth Service → Database
+
+2. **Next.js / React Flow**: DO NOT show React as a separate node from Next.js
+   - ❌ WRONG: \`A[▲ Next.js] <--> B[⚛️ React]\` (they're the same thing!)
+   - ❌ WRONG: Multiple arrows between Next.js and React (creates messy frontend)
+   - ✅ CORRECT: Just use \`A[▲ Next.js]\` (React is built into Next.js)
+   - Next.js should be the ONLY frontend node making API calls
+   - Example: \`Next.js -- "Fetches" --> Supabase\` (clean, single arrow)
+
+3. **Hosting vs. Databases**: DO NOT draw arrows from Databases to Hosting platforms
+   - ❌ WRONG: \`Supabase -- "Stores" --> Vercel\` (backwards! Supabase doesn't store things IN Vercel)
+   - ❌ WRONG: \`PostgreSQL --> Vercel\` (databases don't deploy to hosts)
+   - ✅ CORRECT: \`Next.js/Vercel -- "Fetches" --> Supabase\` (frontend hosted on Vercel requests data from Supabase)
+   - Hosting platforms (Vercel, Netlify, Railway) = WHERE the app runs
+   - Databases (Supabase, PostgreSQL, MongoDB) = WHERE data lives
+   - Arrow direction: Frontend@Hosting → Database, NEVER Database → Hosting
+
+4. **Edge Label Verb Constraints** (CRITICAL - Prevent Semantic Errors):
+   Ensure verbs match the actual function of each node type:
+
+   **UI Frameworks (Next.js, Vue, React):**
+   - ✅ CAN: "Fetches", "Requests", "Calls", "Authenticates", "Queries"
+   - ❌ CANNOT: "Renders" a database (renders UI only), "Stores" (UI doesn't store data)
+
+   **Databases (Supabase, PostgreSQL, MongoDB, Redis):**
+   - ✅ CAN: "Stores", "Caches", "Persists", "Syncs" (when receiving data)
+   - ❌ CANNOT: "Stores" a hosting platform (nonsensical direction)
+   - ❌ CANNOT: Send data TO frontend (should be bidirectional <--> or frontend requests)
+
+   **Hosting Platforms (Vercel, Netlify, Railway):**
+   - ✅ CAN: "Hosts", "Deploys", "Serves"
+   - ❌ CANNOT: Receive "Stores" from a database
+   - ❌ CANNOT: Be the target of data storage operations
+
+   **External APIs (GitHub, Stripe, OpenAI):**
+   - ✅ CAN: Receive "Calls", "Fetches", "Triggers"
+   - ❌ CANNOT: "Renders" anything (they're APIs, not UI)
+
+5. **Common Anti-Patterns to Avoid**:
+   - ❌ \`React -- "Renders" --> Supabase\` (React renders UI components, not databases!)
+   - ❌ \`Supabase -- "Stores" --> Vercel\` (backwards storage direction!)
+   - ❌ \`Database --> CDN\` (CDN serves static assets, not DB connections)
+   - ❌ \`Auth Service --> Frontend\` (should be Frontend → Auth Service)
+   - ❌ Multiple overlapping arrows between Next.js/React/Framework (keep it clean - one frontend node)
+   - ✅ Use logical groupings in subgraphs to clarify layers
+
+**SANITY CHECK EXAMPLES:**
+
+❌ **BAD DIAGRAM** (Multiple errors):
+\`\`\`
+subgraph "Frontend"
+  A[▲ Next.js] <--> B[⚛️ React]
+end
+subgraph "Backend"
+  C[⚡ Supabase]
+end
+subgraph "Infrastructure"
+  D[☁️ Vercel]
+end
+
+B -- "Renders" --> C
+C -- "Stores" --> D
+A -- "Fetches" --> C
+\`\`\`
+Problems:
+- React shown as separate from Next.js with bidirectional arrows (messy)
+- "Renders" used incorrectly (React renders UI, not databases)
+- "Stores" going backwards (Supabase doesn't store things in Vercel)
+
+✅ **GOOD DIAGRAM** (Clean, accurate):
+\`\`\`
+subgraph "Frontend"
+  A[▲ Next.js]
+end
+subgraph "Backend"
+  B[⚡ Supabase]
+  C[💾 PostgreSQL]
+end
+subgraph "Infrastructure"
+  D[☁️ Vercel]
+end
+
+A -- "Fetches" --> B
+B -- "Stores" --> C
+D -- "Hosts" --> A
+\`\`\`
+Benefits:
+- Next.js is the only frontend node (React is implied)
+- Clear, unidirectional data flow: Frontend → Backend → Database
+- Correct verbs: "Fetches" (data retrieval), "Stores" (data persistence), "Hosts" (deployment)
+- Clean layering with minimal arrows
+
 **FORMAT:**
 Return your response as a JSON object:
 {
@@ -407,6 +549,10 @@ export async function getCaseStudyData(
     const openIssues = Number(cachedRepoData?.openIssuesCount) || 0
     const pushedAt = (cachedRepoData?.pushedAt as string) || new Date().toISOString()
 
+    // Parse TL;DR from draft_data
+    const draftData = repoData.draft_data as { tldr?: string } | null
+    const tldr = draftData?.tldr || null
+
     // Parse metrics
     const metrics = Array.isArray(impactData?.impact_metrics) ? impactData.impact_metrics : []
 
@@ -457,6 +603,7 @@ export async function getCaseStudyData(
       repo,
       repositoryUrl,
       description,
+      tldr,
       language,
       stars,
       forks,

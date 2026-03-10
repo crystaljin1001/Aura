@@ -525,6 +525,34 @@ export async function getProjectScripts(repositoryUrl: string) {
 }
 
 /**
+ * Delete a specific script by ID
+ */
+export async function deleteScript(scriptId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  console.log('[deleteScript] Deleting script:', scriptId)
+
+  const { error } = await supabase
+    .from('narrative_scripts')
+    .delete()
+    .eq('id', scriptId)
+    .eq('user_id', user.id) // Ensure user can only delete their own scripts
+
+  if (error) {
+    console.error('[deleteScript] Error deleting script:', error)
+    throw new Error('Failed to delete script')
+  }
+
+  console.log('[deleteScript] Script deleted successfully')
+  revalidatePath('/dashboard')
+}
+
+/**
  * Maps draft metric type to impact metric type
  */
 function mapDraftMetricType(draftType: 'impact' | 'technical' | 'business'): 'issues_resolved' | 'performance' | 'users' | 'quality' | 'features' {
@@ -967,4 +995,159 @@ export async function getArchitectureDiagram(projectId: string) {
     mermaidCode: data.mermaid_code,
     type: data.diagram_type as 'flowchart' | 'sequence' | 'class' | 'architecture',
   }
+}
+
+/**
+ * Find hero commit for a project using AI
+ */
+export async function findHeroCommitForProject(projectId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  try {
+    // Get project info
+    const { data: project, error: projectError } = await supabase
+      .from('user_repositories')
+      .select('repo_owner, repo_name')
+      .eq('id', projectId)
+      .eq('user_id', user.id)
+      .single()
+
+    if (projectError || !project) {
+      throw new Error('Project not found')
+    }
+
+    // Call hero commit finder
+    const { findHeroCommit } = await import('@/features/narrative-storyboarder/api/github-actions')
+    const result = await findHeroCommit(project.repo_owner, project.repo_name)
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'Failed to find hero commit')
+    }
+
+    return {
+      success: true,
+      data: result.data,
+    }
+  } catch (error) {
+    console.error('[findHeroCommitForProject] Error:', error)
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to find hero commit',
+    }
+  }
+}
+
+/**
+ * Save hero commit to project draft data
+ */
+export async function saveHeroCommit(projectId: string, heroCommit: {
+  sha: string
+  message: string
+  date: string
+  author: string
+  url: string
+  stats: {
+    filesChanged: number
+    insertions: number
+    deletions: number
+  }
+  keyFiles: string[]
+  confidence: 'high' | 'medium' | 'low'
+  reasoning: string
+}) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  // Get current draft data
+  const { data: repo, error: fetchError } = await supabase
+    .from('user_repositories')
+    .select('draft_data')
+    .eq('id', projectId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !repo) {
+    throw new Error('Project not found')
+  }
+
+  // Update draft data with hero commit
+  const updatedDraftData = {
+    ...(repo.draft_data || {}),
+    heroCommit: {
+      ...heroCommit,
+      userApproved: false,
+    },
+  }
+
+  const { error } = await supabase
+    .from('user_repositories')
+    .update({
+      draft_data: updatedDraftData
+    })
+    .eq('id', projectId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Error saving hero commit:', error)
+    throw new Error('Failed to save hero commit')
+  }
+
+  revalidatePath('/dashboard')
+}
+
+/**
+ * Accept hero commit and mark as approved
+ */
+export async function acceptHeroCommit(projectId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    throw new Error('Unauthorized')
+  }
+
+  // Get current draft data
+  const { data: repo, error: fetchError } = await supabase
+    .from('user_repositories')
+    .select('draft_data')
+    .eq('id', projectId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (fetchError || !repo || !repo.draft_data?.heroCommit) {
+    throw new Error('Hero commit not found')
+  }
+
+  // Mark hero commit as approved
+  const updatedDraftData = {
+    ...repo.draft_data,
+    heroCommit: {
+      ...repo.draft_data.heroCommit,
+      userApproved: true,
+    },
+  }
+
+  const { error } = await supabase
+    .from('user_repositories')
+    .update({
+      draft_data: updatedDraftData
+    })
+    .eq('id', projectId)
+    .eq('user_id', user.id)
+
+  if (error) {
+    console.error('Error accepting hero commit:', error)
+    throw new Error('Failed to accept hero commit')
+  }
+
+  revalidatePath('/dashboard')
 }

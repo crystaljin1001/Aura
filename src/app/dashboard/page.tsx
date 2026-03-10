@@ -1,4 +1,3 @@
-import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getUserProjectsWithStatus } from '@/features/projects/actions'
@@ -6,7 +5,6 @@ import { ProjectGrid } from '@/features/projects/components/ProjectGrid'
 import { ProjectCard } from '@/features/projects/components/ProjectCard'
 import { AddProjectCard } from '@/features/projects/components/AddProjectCard'
 import { RefreshImpactButton } from '@/features/impact-engine/components/RefreshImpactButton'
-import { TechnicalJourneyModalWrapper } from '@/features/portfolio/components/TechnicalJourneyModalWrapper'
 import { NextStepsGuidance } from '@/features/projects/components/NextStepsGuidance'
 import { SharePortfolioCard } from '@/features/portfolio/components/SharePortfolioCard'
 import Link from 'next/link'
@@ -132,9 +130,9 @@ export default async function DashboardPage() {
                     2
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold mb-1 text-muted-foreground">Write Your Technical Journey</h3>
+                    <h3 className="font-semibold mb-1 text-muted-foreground">Generate Your Demo Script</h3>
                     <p className="text-sm text-muted-foreground">
-                      Tell the story behind your project: the problem, your approach, challenges, and outcomes.
+                      Create a <strong>Master Demo</strong> script that showcases both business value and technical depth in one unified 3-minute pitch.
                     </p>
                   </div>
                 </div>
@@ -144,21 +142,9 @@ export default async function DashboardPage() {
                     3
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold mb-1 text-muted-foreground">Generate Demo Scripts</h3>
+                    <h3 className="font-semibold mb-1 text-muted-foreground">Record & Upload Demo Video</h3>
                     <p className="text-sm text-muted-foreground">
-                      Create narration scripts for your project demos to make recording easier.
-                    </p>
-                  </div>
-                </div>
-
-                <div className="flex gap-4 items-start">
-                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center text-sm font-bold">
-                    4
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold mb-1 text-muted-foreground">Record & Upload Videos</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Capture video demos showing your projects in action to bring your portfolio to life.
+                      Record your demo video using Studio Mode with the AI-generated script as your teleprompter.
                     </p>
                   </div>
                 </div>
@@ -177,11 +163,6 @@ export default async function DashboardPage() {
           </div>
         )}
       </main>
-
-      {/* Technical Journey Modal */}
-      <Suspense fallback={null}>
-        <TechnicalJourneyModalWrapper />
-      </Suspense>
     </div>
   )
 }

@@ -5,7 +5,7 @@
 
 'use client'
 
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AddDecisionForm } from './AddDecisionForm'
 import type { TechDecisionNode } from '../types/logic-map'
 
@@ -16,6 +16,8 @@ interface LogicMapControlsProps {
 
 export function LogicMapControls({ repositoryUrl, existingDecisions }: LogicMapControlsProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const autoOpen = searchParams.get('addDecision') === 'true'
 
   const handleSuccess = () => {
     // Refresh the page to show new decision
@@ -28,6 +30,7 @@ export function LogicMapControls({ repositoryUrl, existingDecisions }: LogicMapC
         repositoryUrl={repositoryUrl}
         existingDecisions={existingDecisions}
         onSuccess={handleSuccess}
+        autoOpen={autoOpen}
       />
     </div>
   )

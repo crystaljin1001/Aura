@@ -3,7 +3,7 @@
  */
 
 // Script type enum
-export type ScriptType = 'user_journey' | 'technical_architecture';
+export type ScriptType = 'user_journey' | 'technical_architecture' | 'product_minded_engineer';
 
 // Legacy script structure (Context → Problem → Process → Outcome)
 export interface LegacyNarrativeScript {
@@ -29,8 +29,17 @@ export interface TechnicalArchitectureScript {
   moat: string;            // Chapter IV: Why it's hard to copy (proprietary logic, Negative Logic datasets)
 }
 
+// Product-Minded Engineer script (5-chapter Master Demo)
+export interface ProductMindedEngineerScript {
+  businessProblem: string;         // Chapter I (0:00-0:30): The exact pain point + business cost
+  userJourney: string;             // Chapter II (0:30-1:30): User workflow walkthrough, "Aha!" moment
+  pragmaticArchitecture: string;   // Chapter III (1:30-2:00): Stack choices, why this architecture
+  tradeoffExecution: string;       // Chapter IV (2:00-2:30): Complex challenge, trade-offs, hero code
+  impactRoadmap: string;           // Chapter V (2:30-3:00): Hard metrics + next steps
+}
+
 // Union type for all script structures
-export type NarrativeScript = LegacyNarrativeScript | UserJourneyScript | TechnicalArchitectureScript;
+export type NarrativeScript = LegacyNarrativeScript | UserJourneyScript | TechnicalArchitectureScript | ProductMindedEngineerScript;
 
 export interface GeneratedScript {
   id: string;
@@ -60,4 +69,8 @@ export function isTechnicalArchitectureScript(script: NarrativeScript): script i
 
 export function isLegacyScript(script: NarrativeScript): script is LegacyNarrativeScript {
   return 'context' in script && 'problem' in script && 'process' in script && 'outcome' in script;
+}
+
+export function isProductMindedEngineerScript(script: NarrativeScript): script is ProductMindedEngineerScript {
+  return 'businessProblem' in script && 'userJourney' in script && 'pragmaticArchitecture' in script && 'tradeoffExecution' in script && 'impactRoadmap' in script;
 }

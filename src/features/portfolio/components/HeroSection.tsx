@@ -22,6 +22,7 @@ export function HeroSection({ project }: HeroSectionProps) {
     owner,
     repositoryUrl,
     description,
+    tldr,
     language,
     stars,
     forks,
@@ -135,13 +136,24 @@ export function HeroSection({ project }: HeroSectionProps) {
 
             {/* Description */}
             {description ? (
-              <p className="text-lg text-muted-foreground leading-relaxed mb-8">
+              <p className="text-lg text-muted-foreground leading-relaxed mb-4">
                 {decodeHtmlEntities(description)}
               </p>
             ) : (
-              <p className="text-lg text-muted-foreground/70 italic leading-relaxed mb-8">
+              <p className="text-lg text-muted-foreground/70 italic leading-relaxed mb-4">
                 No description available. Add a description to your GitHub repository to display it here.
               </p>
+            )}
+
+            {/* TL;DR */}
+            {tldr && (
+              <p className="text-lg text-foreground font-medium leading-relaxed mb-8">
+                {tldr}
+              </p>
+            )}
+
+            {!tldr && (
+              <div className="mb-8" />
             )}
 
             {/* GitHub Stats */}

@@ -87,6 +87,7 @@ export interface CaseStudyProject {
   repo: string
   repositoryUrl: string
   description: string | null
+  tldr?: string | null
   language: string | null
 
   // GitHub Stats

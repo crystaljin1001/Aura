@@ -20,8 +20,6 @@ import { HeroSection } from '@/features/portfolio/components/HeroSection'
 import { ContextBlockSection } from '@/features/portfolio/components/ContextBlockSection'
 import { ArchitectureDiagramSection } from '@/features/portfolio/components/ArchitectureDiagramSection'
 import { ImpactCard } from '@/features/impact-engine/components/ImpactCard'
-import { TechnicalJourneySectionWithEdit } from '@/features/portfolio/components/TechnicalJourneySectionWithEdit'
-import { TechnicalDecisionsSection } from '@/features/portfolio/components/TechnicalDecisionsSection'
 import { ProfessionalProjectAssessment } from '@/features/portfolio/components/ProfessionalProjectAssessment'
 import { CritiqueButton } from '@/features/portfolio/components/CritiqueButton'
 import { DualPulseCard } from '@/features/engineering-rigor/components/DualPulseCard'
@@ -176,49 +174,6 @@ export default async function CaseStudyPage({ params }: PageProps) {
         {/* Hero Section */}
         <HeroSection project={project} />
 
-      {/* CTA: Write Technical Journey (if doesn't exist) */}
-      {!project.technicalJourney && (
-        <section className="max-w-4xl mx-auto px-6 py-12">
-          <div className="glass-card-glow p-8 rounded-2xl border border-blue-500/30 bg-blue-500/5">
-            <div className="flex items-start gap-4">
-              <div className="text-4xl">✨</div>
-              <div>
-                <h3 className="text-xl font-semibold text-foreground mb-2">
-                  Tell Your Technical Story
-                </h3>
-                <p className="text-muted-foreground mb-4">
-                  Make this project stand out by sharing your journey: What problem did you solve?
-                  How did you approach it? What challenges did you overcome?
-                </p>
-                <a
-                  href={`/dashboard?edit=${repositoryUrl}`}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
-                >
-                  Write Technical Journey
-                </a>
-              </div>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* Technical Journey (if exists) */}
-      {project.technicalJourney && (
-        <TechnicalJourneySectionWithEdit
-          repositoryUrl={repositoryUrl}
-          journey={project.technicalJourney}
-          canEdit={true} // User can edit their own projects
-        />
-      )}
-
-      {/* Technical Decisions (if exists) */}
-      {project.technicalJourney?.techDecisions && project.technicalJourney.techDecisions.length > 0 && (
-        <TechnicalDecisionsSection
-          decisions={project.technicalJourney.techDecisions}
-          techStack={project.techStack}
-        />
-      )}
-
       {/* Professional Project Assessment */}
       <section className="max-w-4xl mx-auto px-6 py-16">
         <ProfessionalProjectAssessment
@@ -231,7 +186,7 @@ export default async function CaseStudyPage({ params }: PageProps) {
       <section className="max-w-4xl mx-auto px-6 py-8">
         <CritiqueButton
           repositoryUrl={repositoryUrl}
-          technicalJourney={project.technicalJourney}
+          technicalJourney={undefined}
         />
       </section>
 

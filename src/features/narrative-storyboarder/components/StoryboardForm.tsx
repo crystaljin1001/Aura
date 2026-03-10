@@ -27,7 +27,7 @@ export function StoryboardForm({ preSelectedRepo, projectId, onComplete }: Story
   const [currentProjectId, setCurrentProjectId] = useState<string | undefined>(projectId);
   const [projectName, setProjectName] = useState('');
   const [readmeContent, setReadmeContent] = useState('');
-  const [scriptType, setScriptType] = useState<ScriptType>('user_journey');
+  const [scriptType, setScriptType] = useState<ScriptType>('product_minded_engineer');
   const [isFetchingReadme, setIsFetchingReadme] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedScript, setGeneratedScript] = useState<NarrativeScript | null>(null);
@@ -289,20 +289,11 @@ export function StoryboardForm({ preSelectedRepo, projectId, onComplete }: Story
     <div className="w-full max-w-4xl mx-auto">
       <div className="rounded-lg p-8">
         <h2 className="text-2xl font-bold mb-2 text-foreground">
-          {preSelectedRepo ? 'Generate Demo Scripts' : 'Create Your Video Demo Script'}
+          Generate Video Script
         </h2>
         <p className="text-muted-foreground mb-6">
-          {preSelectedRepo ? (
-            <>
-              Choose between <strong>User Journey</strong> (outcome-focused) or <strong>Technical Architecture</strong> (technical deep-dive) demo.
-              README and commit history will be analyzed automatically.
-            </>
-          ) : (
-            <>
-              Choose between <strong>User Journey</strong> (outcome-focused) or <strong>Technical Architecture</strong> (technical deep-dive) demo.
-              Select a repository to fetch its README, then generate a chaptered narrative with visual cues.
-            </>
-          )}
+          Create a unified <strong>Product-Minded Engineer</strong> demo that hooks HR recruiters in 10 seconds
+          and impresses technical managers by minute two. README and commit history will be analyzed automatically.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
@@ -407,65 +398,37 @@ export function StoryboardForm({ preSelectedRepo, projectId, onComplete }: Story
             </div>
           )}
 
-          {/* Demo Type Selection */}
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-3">
-              🎬 Choose Demo Type *
-            </label>
-            <div className="space-y-3">
-              {/* User Journey Option */}
-              <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                scriptType === 'user_journey'
-                  ? 'border-blue-500 bg-blue-500/10'
-                  : 'border-border hover:border-blue-500/50 bg-background'
-              }`}>
-                <input
-                  type="radio"
-                  name="scriptType"
-                  value="user_journey"
-                  checked={scriptType === 'user_journey'}
-                  onChange={(e) => setScriptType(e.target.value as ScriptType)}
-                  disabled={isGenerating}
-                  className="mt-1 mr-3"
-                />
-                <div className="flex-1">
-                  <div className="font-semibold text-foreground">
-                    📖 User Journey Demo
-                  </div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    Outcome-focused narrative showing value through user success.
-                    Chapters: The Friction → The Social Brain → The Discovery → The Resolution.
-                    Perfect for showcasing AI impact and user wins.
+          {/* Demo Framework Info */}
+          <div className="p-4 border-2 border-blue-500 bg-blue-500/10 rounded-lg">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">🎯</span>
+              <div className="flex-1">
+                <div className="font-semibold text-foreground text-lg mb-2">
+                  Master Demo Framework (3 Minutes)
+                </div>
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>
+                    A 5-chapter pitch that follows the Steve Jobs flow: Problem → Solution → Architecture → Execution → Impact
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    <div className="text-xs">
+                      <span className="font-semibold text-blue-300">Chapter I (0:00-0:30):</span> Business Problem
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-semibold text-purple-300">Chapter II (0:30-1:30):</span> User Journey
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-semibold text-cyan-300">Chapter III (1:30-2:00):</span> Pragmatic Architecture
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-semibold text-green-300">Chapter IV (2:00-2:30):</span> Trade-off & Execution
+                    </div>
+                    <div className="text-xs">
+                      <span className="font-semibold text-orange-300">Chapter V (2:30-3:00):</span> Impact & Roadmap
+                    </div>
                   </div>
                 </div>
-              </label>
-
-              {/* Technical Architecture Option */}
-              <label className={`flex items-start p-4 border-2 rounded-lg cursor-pointer transition-all ${
-                scriptType === 'technical_architecture'
-                  ? 'border-purple-500 bg-purple-500/10'
-                  : 'border-border hover:border-purple-500/50 bg-background'
-              }`}>
-                <input
-                  type="radio"
-                  name="scriptType"
-                  value="technical_architecture"
-                  checked={scriptType === 'technical_architecture'}
-                  onChange={(e) => setScriptType(e.target.value as ScriptType)}
-                  disabled={isGenerating}
-                  className="mt-1 mr-3"
-                />
-                <div className="flex-1">
-                  <div className="font-semibold text-foreground">
-                    🏗️ Technical Architecture Demo
-                  </div>
-                  <div className="text-sm text-muted-foreground mt-1">
-                    Technical deep-dive with structural constraints.
-                    Chapters: Context → The Logic Gate → The Execution → The Moat.
-                    Perfect for showcasing engineering decisions and technical depth.
-                  </div>
-                </div>
-              </label>
+              </div>
             </div>
           </div>
 
@@ -604,13 +567,15 @@ export function StoryboardForm({ preSelectedRepo, projectId, onComplete }: Story
             💡 How it works:
           </h3>
           <ul className="text-sm text-blue-300 space-y-1 list-disc list-inside">
-            <li>Choose your demo type: <strong>User Journey</strong> (value-focused) or <strong>Technical Architecture</strong> (engineering-focused)</li>
             <li>Select a connected repository to auto-fetch its README</li>
-            <li>AI analyzes your README, commit history, and Logic Map using GPT-4o-mini with specialized prompts</li>
-            <li>Generates a 3-5 minute chaptered narrative with visual cues</li>
-            <li><strong>User Journey</strong>: Shows AI impact through user success stories</li>
-            <li><strong>Technical Architecture</strong>: Deep-dive into decisions, trade-offs, and engineering depth</li>
-            <li>Ready to use with Tella, Arcade, or any recording tool</li>
+            <li>AI analyzes your README, commit history, and Logic Map using GPT-4o-mini</li>
+            <li>Generates a 3-minute Master Demo with 5 chapters</li>
+            <li><strong>Chapter I</strong>: Business Problem (define the pain point)</li>
+            <li><strong>Chapter II</strong>: User Journey (show the "Aha!" moment)</li>
+            <li><strong>Chapter III</strong>: Pragmatic Architecture (explain stack choices)</li>
+            <li><strong>Chapter IV</strong>: Trade-off & Execution (prove technical seniority)</li>
+            <li><strong>Chapter V</strong>: Impact & Roadmap (hard metrics + next steps)</li>
+            <li>Use Studio Mode to record with synchronized script and visuals</li>
           </ul>
         </div>
       </div>

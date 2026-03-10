@@ -3,6 +3,7 @@
  * Fetches and displays Logic Map data
  */
 
+import { Suspense } from 'react'
 import { getEnhancedDecisions, getPivotPoints } from '../api/logic-map-actions'
 import { LogicMapSection } from './LogicMapSection'
 import { GenerateLogicMapButton } from './GenerateLogicMapButton'
@@ -49,7 +50,9 @@ export async function LogicMapContainer({ repositoryUrl }: LogicMapContainerProp
           </p>
           <div className="flex flex-wrap gap-3 justify-center">
             <GenerateLogicMapButton repositoryUrl={repositoryUrl} />
-            <LogicMapControls repositoryUrl={repositoryUrl} existingDecisions={[]} />
+            <Suspense fallback={<div className="px-4 py-2 text-sm text-muted-foreground">Loading...</div>}>
+              <LogicMapControls repositoryUrl={repositoryUrl} existingDecisions={[]} />
+            </Suspense>
           </div>
         </div>
       </section>
@@ -68,7 +71,9 @@ export async function LogicMapContainer({ repositoryUrl }: LogicMapContainerProp
       />
       {/* Add controls at the bottom */}
       <section className="max-w-5xl mx-auto px-6 pb-8">
-        <LogicMapControls repositoryUrl={repositoryUrl} existingDecisions={decisions} />
+        <Suspense fallback={<div className="text-center px-4 py-2 text-sm text-muted-foreground">Loading...</div>}>
+          <LogicMapControls repositoryUrl={repositoryUrl} existingDecisions={decisions} />
+        </Suspense>
       </section>
     </>
   )

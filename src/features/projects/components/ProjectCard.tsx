@@ -140,14 +140,13 @@ export function ProjectCard({ project }: ProjectCardProps) {
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h3 className="text-lg font-semibold mb-1">{project.name}</h3>
-              {project.description && (
+              {project.draftData?.tldr ? (
+                <p className="text-sm text-foreground mt-1 font-medium">
+                  {project.draftData.tldr}
+                </p>
+              ) : project.description && (
                 <p className="text-sm text-muted-foreground line-clamp-2">
                   {project.description}
-                </p>
-              )}
-              {project.draftData?.tldr && (
-                <p className="text-sm text-foreground mt-2 font-medium">
-                  {project.draftData.tldr}
                 </p>
               )}
             </div>
